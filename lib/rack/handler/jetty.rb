@@ -3,13 +3,8 @@
 #
 
 require 'java'
-#require 'rubygems'
 require 'rack'
 require 'rack/servlet'
-
-# Make sure we're on JRuby.
-raise("Rack::Handler::Jetty only runs on JRuby.") \
-    unless (RUBY_PLATFORM =~ /java/)
 
 # Load Jetty JARs.
 jars = %w(cometd-api-1.0.0rc0.jar
@@ -24,37 +19,34 @@ jars = %w(cometd-api-1.0.0rc0.jar
     jetty-servlets-7.0.1.v20091125.jar
     jetty-util-7.0.1.v20091125.jar
     servlet-api-2.5.jar)
-
 jars.each { |jar|
     require File.join(File.dirname(__FILE__), '..', '..', 'java', jar) }
-#Dir[path].each { |jar| require jar }
+
+# We don't want to mix our logs in with Solr.
+# FIXME: Implement a custom logger.
+java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
+    "org.eclipse.jetty.util.log.StdErrLog")
 
 class Rack::Handler::Jetty
     # Include various Jetty classes so we can use the short names.
-#    include_class 'org.eclipse.jetty.servlet.DefaultServlet'
     include_class 'org.eclipse.jetty.server.Server'
     include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
     include_class 'org.eclipse.jetty.servlet.ServletHolder'
-    include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+    include_class 'org.eclipse.jetty.util.thread.ExecutorThreadPool'
     include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
-#    include_class 'org.eclipse.jetty.server.handler.ContextHandlerCollection'
-#    include_class 'org.cometd.server.continuation.ContinuationCometdServlet'
-#    include_class 'org.eclipse.jetty.continuation.ContinuationThrowable'
-#    include_class 'org.eclipse.jetty.servlet.FilterMapping'
 
     def self.run(app, options = {})
 	# The Jetty server
 	server = Server.new
 
 	# Thread pool
-	thread_pool = QueuedThreadPool.new
-	thread_pool.min_threads = 5
-	thread_pool.max_threads = 200
+	thread_pool = ExecutorThreadPool.new
 	server.set_thread_pool(thread_pool)
 
 	# Connector
 	connector = SelectChannelConnector.new
-	connector.port = options[:Port].to_i
+	connector.setPort(options[:Port].to_i)
+	connector.setHost(options[:Host])
 	server.addConnector(connector)
 
 	# Servlet context.
@@ -69,6 +61,7 @@ class Rack::Handler::Jetty
 
 	# Add the context to the server and start.
 	server.set_handler(context)
+	puts "Started Jetty on #{connector.getHost}:#{connector.getPort}"
 	server.start
     end
 end
