@@ -1,35 +1,47 @@
-#!/usr/bin/env ruby
 #
-# Runs a Rack application with Jetty as the webserver.
+# A Rack::Handler for Jetty 7.
 #
 
 require 'java'
-require 'rubygems'
+#require 'rubygems'
 require 'rack'
-require 'rack_servlet'
+require 'rack/servlet'
 
 # Make sure we're on JRuby.
 raise("Rack::Handler::Jetty only runs on JRuby.") \
     unless (RUBY_PLATFORM =~ /java/)
 
 # Load Jetty JARs.
-path = 'lib/java/*.jar'
-Dir[path].each { |jar| require jar }
+jars = %w(cometd-api-1.0.0rc0.jar
+    cometd-java-server-1.0.0rc0.jar
+    jetty-continuation-7.0.1.v20091125.jar
+    jetty-http-7.0.1.v20091125.jar
+    jetty-io-7.0.1.v20091125.jar
+    jetty-jmx-7.0.1.v20091125.jar
+    jetty-security-7.0.1.v20091125.jar
+    jetty-server-7.0.1.v20091125.jar
+    jetty-servlet-7.0.1.v20091125.jar
+    jetty-servlets-7.0.1.v20091125.jar
+    jetty-util-7.0.1.v20091125.jar
+    servlet-api-2.5.jar)
 
-# Include classes so we can use the short names.
-classes = [ 'org.eclipse.jetty.servlet.DefaultServlet',
-    'org.eclipse.jetty.server.Server',
-    'org.eclipse.jetty.servlet.ServletContextHandler',
-    'org.eclipse.jetty.servlet.ServletHolder',
-    'org.eclipse.jetty.util.thread.QueuedThreadPool',
-    'org.eclipse.jetty.server.nio.SelectChannelConnector',
-    'org.eclipse.jetty.server.handler.ContextHandlerCollection',
-    'org.cometd.server.continuation.ContinuationCometdServlet',
-    'org.eclipse.jetty.continuation.ContinuationThrowable',
-    'org.eclipse.jetty.servlet.FilterMapping' ]
-classes.each { |c| include_class c }
+jars.each { |jar|
+    require File.join(File.dirname(__FILE__), '..', '..', 'java', jar) }
+#Dir[path].each { |jar| require jar }
 
 class Rack::Handler::Jetty
+    # Include various Jetty classes so we can use the short names.
+#    include_class 'org.eclipse.jetty.servlet.DefaultServlet'
+    include_class 'org.eclipse.jetty.server.Server'
+    include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
+    include_class 'org.eclipse.jetty.servlet.ServletHolder'
+    include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+    include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
+#    include_class 'org.eclipse.jetty.server.handler.ContextHandlerCollection'
+#    include_class 'org.cometd.server.continuation.ContinuationCometdServlet'
+#    include_class 'org.eclipse.jetty.continuation.ContinuationThrowable'
+#    include_class 'org.eclipse.jetty.servlet.FilterMapping'
+
     def self.run(app, options = {})
 	# The Jetty server
 	server = Server.new
@@ -49,8 +61,9 @@ class Rack::Handler::Jetty
 	context = ServletContextHandler.new(nil, "/", 
 	    ServletContextHandler::NO_SESSIONS)
 
+	# The servlet itself.
 	servlet = RackServlet.new
-	servlet.addRackApplication(app)
+	servlet.rackup(app)
 	holder = ServletHolder.new(servlet)
 	context.addServlet(holder, "/")
 
@@ -60,4 +73,5 @@ class Rack::Handler::Jetty
     end
 end
 
+# Register ourselves with Rack when this file gets loaded.
 Rack::Handler.register 'jetty', 'Rack::Handler::Jetty'

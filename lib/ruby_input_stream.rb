@@ -1,8 +1,8 @@
-#!/usr/bin/env ruby
-
 #
-# Wraps a Java InputStream in a Ruby object, and provides IO-like read,
+# Wraps any Java InputStream in a Ruby object, and provides IO-like read,
 # gets, each, and rewind methods.
+#
+# FIXME: Make the default buffer size changeable.
 #
 class RubyInputStream
     DEFAULT_BUFFER_SIZE = 1024

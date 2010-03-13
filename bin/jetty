@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec rackup -r 'rack/handler/jetty' -s jetty $*
