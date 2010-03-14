@@ -1,10 +1,10 @@
 require 'java'
 require 'ruby_input_stream'
 
-# Load the Java Servlet JAR.
-require File.join(File.dirname(__FILE__), '..', 'java',
-    'servlet-api-2.5.jar')
-include_class 'javax.servlet.http.HttpServlet'
+# We assume that Servlets and Continuations have been loaded by the
+# Jetty handler.
+
+include_class javax.servlet.http.HttpServlet
 
 #
 # Wraps a Rack application in a Java servlet.
@@ -15,7 +15,8 @@ include_class 'javax.servlet.http.HttpServlet'
 # http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/servlet/http/HttpServlet.html
 #
 class RackServlet < HttpServlet
-    include_class 'java.io.FileInputStream'
+    include_class java.io.FileInputStream
+    include_class org.eclipse.jetty.continuation.ContinuationSupport
 
     #
     # Sets the Rack application that handles requests sent to this
@@ -33,14 +34,54 @@ class RackServlet < HttpServlet
     # out.
     #
     def service(request, response)
-        # The Rack request that we will pass on.
-        env = Hash.new
+        # Turn the ServletRequest into a Rack env hash
+        env = servlet_to_rack(request)
 
-	# Add our own special bits to the rack environment, because
-	# middleware on JRuby could take advantage of this.
+	# Handle asynchronous responses via Servlet continuations.
+	continuation = ContinuationSupport.getContinuation(request)
+
+	# We should never be re-dispatched.
+	raise("Request re-dispatched.") unless continuation.isInitial
+
+	# Add our own special bits to the rack environment so that 
+	# Rack middleware can have access to the Java internals.
 	env['rack.java.servlet'] = true
 	env['rack.java.servlet.request'] = request
 	env['rack.java.servlet.response'] = response
+	env['rack.java.servlet.continuation'] = continuation
+
+	# Add an callback that can be used to add results to the
+	# response asynchronously.
+	env['async.callback'] = lambda do |rack_response|
+	    servlet_response = continuation.getServletResponse
+	    finished = rack_to_servlet(rack_response, servlet_response)
+	    continuation.complete if finished
+	end
+
+	# Execute the Rack request.
+	catch(:async) do
+	    rack_response = @app.call(env)
+	   
+	    # For apps that don't throw :async.
+	    unless(rack_response[0] == -1)
+		# Nope, nothing asynchronous here.
+		rack_to_servlet(rack_response, response)
+		return
+	    end
+	end
+
+	# If we got here, this is a continuation.
+	continuation.suspend(response)
+    end
+
+    private
+
+    #
+    # Turns a Servlet request into a Rack request hash.
+    #
+    def servlet_to_rack(request)
+        # The Rack request that we will pass on.
+        env = Hash.new
 
 	# Map Servlet bits to Rack bits.
 	env['REQUEST_METHOD'] = request.getMethod
@@ -93,8 +134,19 @@ class RackServlet < HttpServlet
 	# The output stream defaults to stderr.
 	env['rack.errors'] ||= $stderr
 
-	# Execute the Rack request.
-	status, headers, body = @app.call(env)
+	# All done, hand back the Rack request.
+	return(env)
+    end
+
+    #
+    # Turns a Rack response into a Servlet response; can be called
+    # multiple times.  Returns true if this is the full request (either
+    # a synchronous request or the last part of an async request),
+    # false otherwise.
+    #
+    def rack_to_servlet(rack_response, response)
+        # Split apart the Rack response.
+        status, headers, body = rack_response
 
 	# Set the HTTP status code.
 	response.setStatus(status)
@@ -102,6 +154,9 @@ class RackServlet < HttpServlet
 	# Add all the result headers.
 	# FIXME/TEST: Multiple Set-Cookie?
 	headers.each_pair { |h, v| response.addHeader(h, v) }
+
+	# How else would we write output?
+	output = response.getOutputStream
 
 	# Handle the result body.
 	if(body.respond_to?(:to_path))
@@ -111,7 +166,6 @@ class RackServlet < HttpServlet
 	    #
 	    # FIXME: Make the buffer size adjustable, or detect the
 	    # filesystem's ideal block size a-la cp.
-	    output = response.getOutputStream
 	    buffer = Java::byte[1024].new
 	    file = FileInputStream.new(body.to_path)
 	    while((count = file.read(buffer)) != -1)
@@ -121,7 +175,6 @@ class RackServlet < HttpServlet
 	else
 	    # Nope, we've got something that responds to each; send
 	    # that to the servlet PrintWriter.
-	    output = response.getWriter
 	    body.each { |l| output.print(l) }
 	end
 
@@ -130,5 +183,9 @@ class RackServlet < HttpServlet
 
 	# All done.
 	output.flush
+
+	# Is this an synchonous call?
+	return(true) unless body.respond_to?(:finished?)
+	return(body.finished? == true)
     end
 end

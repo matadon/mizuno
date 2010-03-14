@@ -4,7 +4,6 @@
 
 require 'java'
 require 'rack'
-require 'rack/servlet'
 
 # Load Jetty JARs.
 jars = %w(cometd-api-1.0.0rc0.jar
@@ -21,6 +20,9 @@ jars = %w(cometd-api-1.0.0rc0.jar
     servlet-api-2.5.jar)
 jars.each { |jar|
     require File.join(File.dirname(__FILE__), '..', '..', 'java', jar) }
+
+# Load the Rack/Servlet bridge.
+require 'rack/servlet'
 
 # We don't want to mix our logs in with Solr.
 # FIXME: Implement a custom logger.
