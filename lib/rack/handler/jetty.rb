@@ -4,6 +4,7 @@
 
 require 'java'
 require 'rack'
+require 'eventmachine'
 
 # Load Jetty JARs.
 jars = %w(cometd-api-1.0.0rc0.jar
@@ -38,6 +39,9 @@ class Rack::Handler::Jetty
     include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
 
     def self.run(app, options = {})
+        # Block until the EventMachine reactor is running.
+#        start_event_machine
+
 	# The Jetty server
 	server = Server.new
 
@@ -65,6 +69,22 @@ class Rack::Handler::Jetty
 	server.set_handler(context)
 	puts "Started Jetty on #{connector.getHost}:#{connector.getPort}"
 	server.start
+    end
+
+    private
+
+    def self.start_event_machine
+	puts "Starting reactor..."
+	queue = Queue.new
+	Thread.new do
+	    EventMachine::run do
+		EventMachine::next_tick { queue.push('done!') }
+		EventMachine::add_periodic_timer(10) { puts "ding!" }
+	    end
+	end
+	queue.pop
+	sleep(3)
+	puts "started!"
     end
 end
 
