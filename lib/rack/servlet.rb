@@ -9,8 +9,6 @@ include_class javax.servlet.http.HttpServlet
 #
 # Wraps a Rack application in a Java servlet.
 #
-# FIXME: relativeResourceBase?
-#
 # http://rack.rubyforge.org/doc/SPEC.html
 # http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/servlet/http/HttpServlet.html
 #
@@ -32,6 +30,19 @@ class RackServlet < HttpServlet
     # is translating the various bits of the Servlet API into the Rack
     # API on the way in, and translating the response back on the way
     # out.
+    #
+    # Also, we implement a common extension to the Rack api for
+    # asynchronous request processing.  We supply an 'async.callback' 
+    # parameter in env to the Rack application.  If we catch an
+    # :async symbol thrown by the app, we initiate a Jetty continuation.
+    #
+    # The only thing that breaks from the 'normal' way Rack apps handle
+    # this is that we expect the body to respond_to :finished?, and
+    # return 'true' if the request is done, so we can call
+    # continuation.complete and finish the request.
+    #
+    # If the body doesn't respond_to :finished?, then we complete the
+    # request when we're done.
     #
     def service(request, response)
         # Turn the ServletRequest into a Rack env hash
@@ -152,8 +163,7 @@ class RackServlet < HttpServlet
 	response.setStatus(status)
 
 	# Add all the result headers.
-	# FIXME/TEST: Multiple Set-Cookie?
-	headers.each_pair { |h, v| response.addHeader(h, v) }
+	headers.each { |h, v| response.addHeader(h, v) }
 
 	# How else would we write output?
 	output = response.getOutputStream
