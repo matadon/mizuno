@@ -160,6 +160,13 @@ class RackServlet < HttpServlet
     # a synchronous request or the last part of an async request),
     # false otherwise.
     #
+    # Note that keep-alive *only* happens if we get either a pathname
+    # (because we can find the length ourselves), or if we get a 
+    # Content-Length header as part of the response.  While we can
+    # readily buffer the response object to figure out how long it is,
+    # we have no guarantee that we aren't going to be buffering
+    # something *huge*.
+    #
     # http://docstore.mik.ua/orelly/java-ent/servlet/ch05_03.htm
     #
     def rack_to_servlet(rack_response, response, async = false)
@@ -171,6 +178,11 @@ class RackServlet < HttpServlet
         unless(response.isCommitted)
 	    # Set the HTTP status code.
 	    response.setStatus(status)
+
+	    # Did we get a Content-Length header?
+	    content_length = headers.delete('Content-Length')
+	    response.setContentLength(content_length.to_i) \
+	        if((not async) and content_length)
 
 	    # Add all the result headers.
 	    headers.each { |h, v| response.addHeader(h, v) }
@@ -188,7 +200,8 @@ class RackServlet < HttpServlet
 
 	    # We set the content-length so we can use Keep-Alive,
 	    # unless this is an async request.
-	    response.setContentLength(file.length) unless async
+	    response.setContentLength(file.length) \
+	        unless (content_length or async)
 
 	    # Stream the file directly.
 	    buffer = Java::byte[4096].new
@@ -198,12 +211,7 @@ class RackServlet < HttpServlet
 	    end
 	    input_stream.close
 	else
-	    # Nope, we've got something that responds to each; send
-	    # that to the servlet PrintWriter.
-	    buffer = String.new
-	    body.each { |l| buffer << l }
-	    response.setContentLength(buffer.length) unless async
-	    output.print(buffer)
+	    body.each { |l| output.print(l) }
 	end
 
 	# Close the body if we're supposed to.

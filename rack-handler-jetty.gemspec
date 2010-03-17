@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rack-handler-jetty}
-  s.version = "0.3.1"
+  s.version = "0.3.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Don Werve"]
-  s.date = %q{2010-03-15}
+  s.date = %q{2010-03-17}
   s.default_executable = %q{jetty}
   s.description = %q{Jetty handler for Rackup}
   s.email = %q{don@madwombat.com}
