@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake'
 require 'echoe'
 
-Echoe.new('rack-handler-jetty', '0.3.0') do |p|
+Echoe.new('rack-handler-jetty', '0.3.1') do |p|
     p.description = "Jetty handler for Rackup"
     p.summary = "Implements Rack::Handler::Jetty"
     p.url = "http://github.com/madwombat/rack-handler-jetty"

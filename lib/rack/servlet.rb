@@ -51,6 +51,10 @@ class RackServlet < HttpServlet
 	# Handle asynchronous responses via Servlet continuations.
 	continuation = ContinuationSupport.getContinuation(request)
 
+	# If this is an expired connection, do nothing.
+	# FIXME: Is this the best way to handle things?
+	return if continuation.isExpired
+
 	# We should never be re-dispatched.
 	raise("Request re-dispatched.") unless continuation.isInitial
 
@@ -65,7 +69,8 @@ class RackServlet < HttpServlet
 	# response asynchronously.
 	env['async.callback'] = lambda do |rack_response|
 	    servlet_response = continuation.getServletResponse
-	    finished = rack_to_servlet(rack_response, servlet_response)
+	    finished = rack_to_servlet(rack_response, 
+		servlet_response, true)
 	    continuation.complete if finished
 	end
 
@@ -155,37 +160,50 @@ class RackServlet < HttpServlet
     # a synchronous request or the last part of an async request),
     # false otherwise.
     #
-    def rack_to_servlet(rack_response, response)
+    # http://docstore.mik.ua/orelly/java-ent/servlet/ch05_03.htm
+    #
+    def rack_to_servlet(rack_response, response, async = false)
         # Split apart the Rack response.
         status, headers, body = rack_response
 
-	# Set the HTTP status code.
-	response.setStatus(status)
+	# No need to send headers again if we've already shipped 
+	# data out on an async request.
+        unless(response.isCommitted)
+	    # Set the HTTP status code.
+	    response.setStatus(status)
 
-	# Add all the result headers.
-	headers.each { |h, v| response.addHeader(h, v) }
+	    # Add all the result headers.
+	    headers.each { |h, v| response.addHeader(h, v) }
+	end
 
 	# How else would we write output?
 	output = response.getOutputStream
 
-	# Handle the result body.
+	# Turn the body into something nice and Java-y.
 	if(body.respond_to?(:to_path))
 	    # We've been told to serve a file; use FileInputStream to
 	    # stream the file directly to the servlet, because this
 	    # is a lot faster than doing it with Ruby.
-	    #
-	    # FIXME: Make the buffer size adjustable, or detect the
-	    # filesystem's ideal block size a-la cp.
-	    buffer = Java::byte[1024].new
-	    file = FileInputStream.new(body.to_path)
-	    while((count = file.read(buffer)) != -1)
+	    file = java.io.File.new(body.to_path)
+
+	    # We set the content-length so we can use Keep-Alive,
+	    # unless this is an async request.
+	    response.setContentLength(file.length) unless async
+
+	    # Stream the file directly.
+	    buffer = Java::byte[4096].new
+	    input_stream = FileInputStream.new(file)
+	    while((count = input_stream.read(buffer)) != -1)
 	        output.write(buffer, 0, count)
 	    end
-	    file.close
+	    input_stream.close
 	else
 	    # Nope, we've got something that responds to each; send
 	    # that to the servlet PrintWriter.
-	    body.each { |l| output.print(l) }
+	    buffer = String.new
+	    body.each { |l| buffer << l }
+	    response.setContentLength(buffer.length) unless async
+	    output.print(buffer)
 	end
 
 	# Close the body if we're supposed to.
@@ -195,6 +213,7 @@ class RackServlet < HttpServlet
 	output.flush
 
 	# Is this an synchonous call?
+	return(true) unless async
 	return(true) unless body.respond_to?(:finished?)
 	return(body.finished? == true)
     end
