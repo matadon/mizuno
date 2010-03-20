@@ -5,18 +5,21 @@
 require 'java'
 require 'rack'
 
+#cometd-api-1.0.0rc0.jar
+#cometd-java-server-1.0.0rc0.jar
+
+# These are various servlet filters.
+
 # Load Jetty JARs.
-jars = %w(cometd-api-1.0.0rc0.jar
-    cometd-java-server-1.0.0rc0.jar
+jars = %w(jetty-server-7.0.1.v20091125.jar
     jetty-continuation-7.0.1.v20091125.jar
     jetty-http-7.0.1.v20091125.jar
     jetty-io-7.0.1.v20091125.jar
     jetty-jmx-7.0.1.v20091125.jar
-    jetty-security-7.0.1.v20091125.jar
-    jetty-server-7.0.1.v20091125.jar
     jetty-servlet-7.0.1.v20091125.jar
     jetty-servlets-7.0.1.v20091125.jar
     jetty-util-7.0.1.v20091125.jar
+    jetty-security-7.0.1.v20091125.jar
     servlet-api-2.5.jar)
 jars.each { |jar|
     require File.join(File.dirname(__FILE__), '..', '..', 'java', jar) }

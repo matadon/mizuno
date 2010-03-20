@@ -69,9 +69,8 @@ class RackServlet < HttpServlet
 	# response asynchronously.
 	env['async.callback'] = lambda do |rack_response|
 	    servlet_response = continuation.getServletResponse
-	    finished = rack_to_servlet(rack_response, 
-		servlet_response, true)
-	    continuation.complete if finished
+	    rack_to_servlet(rack_response, servlet_response) \
+	        and continuation.complete
 	end
 
 	# Execute the Rack request.
@@ -169,9 +168,14 @@ class RackServlet < HttpServlet
     #
     # http://docstore.mik.ua/orelly/java-ent/servlet/ch05_03.htm
     #
-    def rack_to_servlet(rack_response, response, async = false)
+    def rack_to_servlet(rack_response, response)
         # Split apart the Rack response.
         status, headers, body = rack_response
+
+	# We assume the request is finished if we got empty headers,
+	# an empty body, and we have a committed response.
+	finished = (headers.empty? and body.empty?)
+	return(true) if (finished and response.isCommitted)
 
 	# No need to send headers again if we've already shipped 
 	# data out on an async request.
@@ -182,7 +186,7 @@ class RackServlet < HttpServlet
 	    # Did we get a Content-Length header?
 	    content_length = headers.delete('Content-Length')
 	    response.setContentLength(content_length.to_i) \
-	        if((not async) and content_length)
+	        if content_length
 
 	    # Add all the result headers.
 	    headers.each { |h, v| response.addHeader(h, v) }
@@ -201,7 +205,7 @@ class RackServlet < HttpServlet
 	    # We set the content-length so we can use Keep-Alive,
 	    # unless this is an async request.
 	    response.setContentLength(file.length) \
-	        unless (content_length or async)
+	        unless content_length
 
 	    # Stream the file directly.
 	    buffer = Java::byte[4096].new
@@ -219,10 +223,5 @@ class RackServlet < HttpServlet
 
 	# All done.
 	output.flush
-
-	# Is this an synchonous call?
-	return(true) unless async
-	return(true) unless body.respond_to?(:finished?)
-	return(body.finished? == true)
     end
 end
