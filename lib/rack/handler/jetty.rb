@@ -37,15 +37,17 @@ class Rack::Handler::Jetty
     include_class 'org.eclipse.jetty.server.Server'
     include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
     include_class 'org.eclipse.jetty.servlet.ServletHolder'
-    include_class 'org.eclipse.jetty.util.thread.ExecutorThreadPool'
     include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
+    include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
 
     def self.run(app, options = {})
 	# The Jetty server
 	server = Server.new
 
 	# Thread pool
-	thread_pool = ExecutorThreadPool.new
+	thread_pool = QueuedThreadPool.new
+	thread_pool.min_threads = 5
+	thread_pool.max_threads = 50
 	server.set_thread_pool(thread_pool)
 
 	# Connector
