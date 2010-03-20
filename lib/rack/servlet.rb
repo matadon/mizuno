@@ -36,13 +36,8 @@ class RackServlet < HttpServlet
     # parameter in env to the Rack application.  If we catch an
     # :async symbol thrown by the app, we initiate a Jetty continuation.
     #
-    # The only thing that breaks from the 'normal' way Rack apps handle
-    # this is that we expect the body to respond_to :finished?, and
-    # return 'true' if the request is done, so we can call
-    # continuation.complete and finish the request.
-    #
-    # If the body doesn't respond_to :finished?, then we complete the
-    # request when we're done.
+    # When 'async.callback' gets a response with empty headers and an
+    # empty body, we declare the async response finished.
     #
     def service(request, response)
         # Turn the ServletRequest into a Rack env hash
@@ -174,7 +169,8 @@ class RackServlet < HttpServlet
 
 	# We assume the request is finished if we got empty headers,
 	# an empty body, and we have a committed response.
-	finished = (headers.empty? and body.empty?)
+	finished = (headers.empty? and \
+	    body.respond_to?(:empty?) and body.empty?)
 	return(true) if (finished and response.isCommitted)
 
 	# No need to send headers again if we've already shipped 
