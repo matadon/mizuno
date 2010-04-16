@@ -1,6 +1,3 @@
-require 'java'
-require 'ruby_input_stream'
-
 # We assume that Servlets and Continuations have been loaded by the
 # Jetty handler.
 
@@ -139,7 +136,7 @@ class RackServlet < HttpServlet
 	    if env["HTTP_CONTENT_LENGTH"]
 
 	# The input stream is a wrapper around the Java InputStream.
-	env['rack.input'] = RubyInputStream.new(request.getInputStream)
+	env['rack.input'] = request.getInputStream.to_io
 
 	# The output stream defaults to stderr.
 	env['rack.errors'] ||= $stderr

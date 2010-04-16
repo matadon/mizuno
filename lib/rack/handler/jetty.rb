@@ -11,18 +11,8 @@ require 'rack'
 # These are various servlet filters.
 
 # Load Jetty JARs.
-jars = %w(jetty-server-7.0.1.v20091125.jar
-    jetty-continuation-7.0.1.v20091125.jar
-    jetty-http-7.0.1.v20091125.jar
-    jetty-io-7.0.1.v20091125.jar
-    jetty-jmx-7.0.1.v20091125.jar
-    jetty-servlet-7.0.1.v20091125.jar
-    jetty-servlets-7.0.1.v20091125.jar
-    jetty-util-7.0.1.v20091125.jar
-    jetty-security-7.0.1.v20091125.jar
-    servlet-api-2.5.jar)
-jars.each { |jar|
-    require File.join(File.dirname(__FILE__), '..', '..', 'java', jar) }
+jars = File.join(File.dirname(__FILE__), '..', '..', 'java', '*.jar')
+Dir[jars].each { |j| require j }
 
 # Load the Rack/Servlet bridge.
 require 'rack/servlet'
