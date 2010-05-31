@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+# Make sure we're on JRuby.
+raise("Rack::Handler::Mizuno only runs on JRuby.") \
+    unless (RUBY_PLATFORM =~ /java/)
+
+require 'rack'
+require 'rack/handler/mizuno'
+
+server = Rack::Server.new
+server.options[:server] = 'mizuno'
+server.start

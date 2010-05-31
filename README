@@ -1,0 +1,41 @@
+ is a high-performance Rack adapter for JRuby apps,
+based on the latest version of the Jetty webserver 
+(http://jetty.codehaus.org/jetty/)
+
+To use rack-handler-jetty with your Rack app:
+
+    gem install rack-handler-jetty
+    cd /path/to/my/app
+    jetty
+
+We get our performance by implementing a direct servlet-to-rack bridge 
+via JRuby's Java integration layer.
+
+The numbers speak for themselves:
+
+    ruby 1.9.1p243
+
+    Mongrel
+    Webrick
+    Thin
+
+    JRuby 1.5.0RC1 on Java SE Server VM 1.6.0_17-b04
+
+    Mongrel
+    Webrick
+    rack-handler-jetty
+    Jetty+Warbler
+    Tomcat+Warbler
+
+rack-handler-jetty also provides access to the underlaying servlet
+context, allowing for runtime additions of additional servlets and
+filters.  We plan on using this to tie in the cometd servlet
+as a piece of Rack middleware, which will provide a simple way to 
+add Comet funtionality, via the Bayeux protocol, to any Rack 
+application.
+
+Note that rack-handler-jetty is NOT a direct replacement for jruby-rack
+or Warbler, as we don't produce WAR files or make any attempt to package
+a Rack application for installation in a Java web container.  Rather, we
+just make it really easy to use Jetty as a webserver for your Rack
+applications.
