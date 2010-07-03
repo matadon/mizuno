@@ -2,9 +2,9 @@ require 'rubygems'
 require 'rake'
 require 'echoe'
 
-Echoe.new('rack-handler-jetty', '0.3.4') do |p|
+Echoe.new('mizuno', '0.3.6') do |p|
     p.description = "Jetty handler for Rackup"
-    p.summary = "Implements Rack::Handler::Jetty"
+    p.summary = "Implements Rack::Handler::Mizuno"
     p.url = "http://github.com/madwombat/rack-handler-jetty"
     p.author = "Don Werve"
     p.email = "don@madwombat.com"

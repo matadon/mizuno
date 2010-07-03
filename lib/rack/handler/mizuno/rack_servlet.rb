@@ -1,6 +1,8 @@
 #
 # Wraps a Rack application in a Java servlet.
 #
+# Relevant documentation:
+#
 # http://rack.rubyforge.org/doc/SPEC.html
 # http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/servlet/http/HttpServlet.html
 #
@@ -42,7 +44,6 @@ module Rack::Handler::Mizuno
 	    continuation = ContinuationSupport.getContinuation(request)
 
 	    # If this is an expired connection, do nothing.
-	    # FIXME: Is this the best way to handle things?
 	    return if continuation.isExpired
 
 	    # We should never be re-dispatched.
@@ -113,9 +114,7 @@ module Rack::Handler::Mizuno
 	    env['REQUEST_URI'] << "?#{env['QUERY_STRING']}" \
 		if env['QUERY_STRING']
 
-	    # FIXME
-	    # It's a given that we're single-process on JRuby, because we
-	    # can't fork, but this should probably be user-settable.
+	    # JRuby is like the matrix, only there's no spoon or fork().
 	    env['rack.multiprocess'] = false
 	    env['rack.multithread'] = true
 	    env['rack.run_once'] = false

@@ -1,7 +1,7 @@
 #
 # A Rack handler for Jetty 7.
 #
-# Written by Don Werve <don.werve@gmail.com>
+# Written by Don Werve <don@madwombat.com>
 #
 
 require 'java'
@@ -14,14 +14,12 @@ Dir[jars].each { |j| require j }
 # Load the Rack/Servlet bridge.
 require 'rack/handler/mizuno/rack_servlet'
 
-# We don't want to mix our logs in with Solr.
-# FIXME: Implement a custom logger.
+# Have Jetty log to stdout for the time being.
 java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
     "org.eclipse.jetty.util.log.StdErrLog")
 
 module Rack::Handler::Mizuno
     class HttpServer
-	# Include various Jetty classes so we can use the short names.
 	include_class 'org.eclipse.jetty.server.Server'
 	include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
 	include_class 'org.eclipse.jetty.servlet.ServletHolder'
@@ -63,4 +61,4 @@ module Rack::Handler::Mizuno
 end
 
 # Register ourselves with Rack when this file gets loaded.
-Rack::Handler.register 'mizuno', 'Rack::Handler::Mizuno::Server'
+Rack::Handler.register 'mizuno', 'Rack::Handler::Mizuno::HttpServer'
