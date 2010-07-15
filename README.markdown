@@ -27,7 +27,16 @@ because it doesn't produce WAR files or make any attempt to package a
 Rack application for installation in a Java web container.
 
 There's also a few features that I have yet to implement:
+
 1. Integrate the cometd servlet to provide Comet/Bayeux.
 2. Route Jetty's logs into Rack::Logger.
 3. Add hooks for realtime monitoring of server performance.
 4. Add the ability to run multiple Rack apps in a single JVM.
+
+Mizuno is licensed under the Apache Public License, version 2.0; see
+the LICENSE file for details.
+
+Jetty is dual-licensed under the [Eclipse and Apache open-source 
+licenses](http://www.eclipse.org/jetty/licenses.php), and its
+development is hosted by the [Eclipse 
+Foundation](http://www.eclipse.org/jetty/)
