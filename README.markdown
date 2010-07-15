@@ -34,7 +34,8 @@ There's also a few features that I have yet to implement:
 4. Add the ability to run multiple Rack apps in a single JVM.
 
 Mizuno is licensed under the Apache Public License, version 2.0; see
-the LICENSE file for details.
+the LICENSE file for details, and was developed on behalf of 
+[Mad Wombat Software](http://www.madwombat.com)
 
 Jetty is dual-licensed under the [Eclipse and Apache open-source 
 licenses](http://www.eclipse.org/jetty/licenses.php), and its
