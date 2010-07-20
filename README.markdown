@@ -13,7 +13,7 @@ handler.
 
 Mizuno is the fastest option for Rack applications on JRuby:
 
-    Mizuno: 6106.66 req/s (mean)
+    Mizuno: 7060.31 req/s (mean)
     Jetty (via jruby-rack): 2011.67 req/s (mean)
     Mongrel: 1479.15 req/sec (mean)
 
