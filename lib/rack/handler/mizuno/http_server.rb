@@ -55,8 +55,40 @@ module Rack::Handler::Mizuno
 	    # Add the context to the server and start.
 	    server.set_handler(context)
 	    puts "Started Jetty on #{connector.getHost}:#{connector.getPort}"
-	    server.start
-	end
+
+            stop = lambda { server.stop }
+
+            Signal.trap "INT", stop
+            Signal.trap "TERM", stop
+
+            rootTG = lambda do
+                tg = java.lang.Thread.currentThread.thread_group;
+                while (tg.parent) 
+                    tg = tg.parent
+                end
+                tg
+            end
+          
+            threads = lambda do
+                root = rootTG.call
+                nAlloc = 100
+                n = 0
+                ts = java.lang.Thread[nAlloc].new
+                begin
+                    nAlloc *= 2
+                    ts = java.lang.Thread[nAlloc].new
+                    n = root.enumerate ts, true
+                end while n == nAlloc
+                ts.inject([]) { |array, t| array << t if t; array }
+            end
+
+            before = threads.call
+            server.start
+            after = threads.call
+            (after - before).each do |t|
+                t.join
+            end
+  	end
     end
 end
 
