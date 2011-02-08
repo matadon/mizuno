@@ -20,43 +20,46 @@ java.lang.System.setProperty("org.eclipse.jetty.util.log.class",
 
 module Rack::Handler::Mizuno
     class HttpServer
-	include_class 'org.eclipse.jetty.server.Server'
-	include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
-	include_class 'org.eclipse.jetty.servlet.ServletHolder'
-	include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
-	include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+        include_class 'org.eclipse.jetty.server.Server'
+        include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
+        include_class 'org.eclipse.jetty.servlet.ServletHolder'
+        include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
+        include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
 
-	def self.run(app, options = {})
-	    # The Jetty server
-	    server = Server.new
+        def self.run(app, options = {})
+            # The Jetty server
+            server = Server.new
 
-	    # Thread pool
-	    thread_pool = QueuedThreadPool.new
-	    thread_pool.min_threads = 5
-	    thread_pool.max_threads = 50
-	    server.set_thread_pool(thread_pool)
+            # Thread pool
+            thread_pool = QueuedThreadPool.new
+            thread_pool.min_threads = 5
+            thread_pool.max_threads = 50
+            server.set_thread_pool(thread_pool)
 
-	    # Connector
-	    connector = SelectChannelConnector.new
-	    connector.setPort(options[:Port].to_i)
-	    connector.setHost(options[:Host])
-	    server.addConnector(connector)
+            # Connector
+            connector = SelectChannelConnector.new
+            connector.setPort(options[:Port].to_i)
+            connector.setHost(options[:Host])
+            server.addConnector(connector)
 
-	    # Servlet context.
-	    context = ServletContextHandler.new(nil, "/", 
-		ServletContextHandler::NO_SESSIONS)
+            # Servlet context.
+            context = ServletContextHandler.new(nil, "/", 
+                ServletContextHandler::NO_SESSIONS)
 
-	    # The servlet itself.
-	    servlet = RackServlet.new
-	    servlet.rackup(app)
-	    holder = ServletHolder.new(servlet)
-	    context.addServlet(holder, "/")
+            # The servlet itself.
+            servlet = RackServlet.new
+            servlet.rackup(app)
+            holder = ServletHolder.new(servlet)
+            context.addServlet(holder, "/")
 
-	    # Add the context to the server and start.
-	    server.set_handler(context)
-	    puts "Started Jetty on #{connector.getHost}:#{connector.getPort}"
-	    server.start
-	end
+            # Add the context to the server and start.
+            server.set_handler(context)
+            puts "Started Jetty on #{connector.getHost}:#{connector.getPort}"
+            server.start
+
+            # Stop the server when we get The Signal.
+            trap("SIGINT") { server.stop and exit }
+        end
     end
 end
 

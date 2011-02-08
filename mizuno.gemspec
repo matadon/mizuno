@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
     spec.email = 'don@madwombat.com'
     spec.executables = [ "mizuno" ]
     spec.files = %w( .gitignore
-        README 
+        README.markdown
         LICENSE
         mizuno.gemspec
         lib/java/bayeux-api-2.1.0.jar
