@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
     spec.has_rdoc = false
     spec.require_paths = [ "lib" ]
     spec.rubygems_version = '1.3.6'
+    spec.add_dependency('rack', 'rack >= 1.0.0')
 end
