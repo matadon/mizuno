@@ -17,7 +17,8 @@ Mizuno is the fastest option for Rack applications on JRuby:
     Jetty (via jruby-rack): 2011.67 req/s (mean)
     Mongrel: 1479.15 req/sec (mean)
 
-Mizuno also supports asynchronous request handling.
+Mizuno also supports asynchronous request handling, via the Java Servlet
+3.0 asynchronous processing mechanism
 
 All the speed comes from Jetty 7; Mizuno just ties it to Rack through
 JRuby's Ruby/Java integration layer.
@@ -28,10 +29,8 @@ Rack application for installation in a Java web container.
 
 There's also a few features that I have yet to implement:
 
-1. Integrate the cometd servlet to provide Comet/Bayeux.
-2. Route Jetty's logs into Rack::Logger.
-3. Add hooks for realtime monitoring of server performance.
-4. Add the ability to run multiple Rack apps in a single JVM.
+1. Route Jetty's logs into Rack::Logger.
+2. Add hooks for realtime monitoring of server performance.
 
 Mizuno is licensed under the Apache Public License, version 2.0; see
 the LICENSE file for details, and was developed on behalf of 
