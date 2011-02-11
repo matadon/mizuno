@@ -1,24 +1,8 @@
-#
-# A Rack handler for Jetty 7.
-#
-# Written by Don Werve <don@madwombat.com>
-#
-
-require 'java'
-require 'rack'
-
-# Load Jetty JARs.
-jars = File.join(File.dirname(__FILE__), '..', '..', '..', 'java', '*.jar')
-Dir[jars].each { |j| require j }
-
-# Load the Rack/Servlet bridge.
-require 'rack/handler/mizuno/rack_servlet'
-
 # Have Jetty log to stdout for the time being.
 java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
     "org.eclipse.jetty.util.log.StdErrLog")
 
-module Rack::Handler::Mizuno
+module Mizuno
     class HttpServer
         include_class 'org.eclipse.jetty.server.Server'
         include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
@@ -59,9 +43,14 @@ module Rack::Handler::Mizuno
 
             # Stop the server when we get The Signal.
             trap("SIGINT") { server.stop and exit }
+
+            # Join with the server thread, so that currently open file
+            # descriptors don't get closed by accident.
+            # http://www.ruby-forum.com/topic/209252
+            server.join
         end
     end
 end
 
 # Register ourselves with Rack when this file gets loaded.
-Rack::Handler.register 'mizuno', 'Rack::Handler::Mizuno::HttpServer'
+Rack::Handler.register 'mizuno', 'Mizuno::HttpServer'
