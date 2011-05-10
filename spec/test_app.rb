@@ -63,7 +63,7 @@ class TestApp
                     subscriber.call(response.finish)
                     next(true)
                 else
-                    response.write(message)
+                    response.body = message
                     subscriber.call(response.finish)
                     next(false)
                 end
