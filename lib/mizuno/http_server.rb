@@ -61,7 +61,6 @@ module Mizuno
 
             # Add the context to the server and start.
             @server.set_handler(context)
-            puts "Listening on #{connector.getHost}:#{connector.getPort}"
             @server.start
 
             # Stop the server when we get The Signal.
