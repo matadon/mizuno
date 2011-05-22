@@ -1,17 +1,5 @@
 Manifest
 Rakefile
-lib/java/cometd-api-1.1.0.jar
-lib/java/cometd-java-server-1.1.0.jar
-lib/java/jetty-continuation-7.0.2.v20100331.jar
-lib/java/jetty-http-7.0.2.v20100331.jar
-lib/java/jetty-io-7.0.2.v20100331.jar
-lib/java/jetty-jmx-7.0.2.v20100331.jar
-lib/java/jetty-security-7.0.2.v20100331.jar
-lib/java/jetty-server-7.0.2.v20100331.jar
-lib/java/jetty-servlet-7.0.2.v20100331.jar
-lib/java/jetty-servlets-7.0.2.v20100331.jar
-lib/java/jetty-util-7.0.2.v20100331.jar
-lib/java/servlet-api-2.5.jar
 bin/mizuno
 lib/rack/handler/mizuno/http_server.rb
 lib/rack/handler/mizuno/rack_servlet.rb
