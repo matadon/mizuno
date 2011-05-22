@@ -29,8 +29,22 @@ Rack application for installation in a Java web container.
 
 There's also a few features that I have yet to implement:
 
-1. Route Jetty's logs into Rack::Logger.
-2. Add hooks for realtime monitoring of server performance.
+1. Add hooks for realtime monitoring of server performance.
+
+## Logging
+
+Mizuno requires [rjack-slf4j][] which provides a unified interface for
+Java/Ruby logging. Jetty auto-detect SLF4J's presence and logs
+there. A logging output provider must also be loaded. The minzuno
+script will load [rjack-logback][] if found or otherwise fall back to
+`rjack-slf4j/simple`.  If you are starting Mizuno through some other
+means than the mizuno script, you will need to load an output provider
+(see linked docs.)
+
+[rjack-slf4j]:   http://rjack.rubyforge.org/slf4j/RJack/SLF4J.html
+[rjack-logback]: http://rjack.rubyforge.org/logback/RJack/Logback.html
+
+## License
 
 Mizuno is licensed under the Apache Public License, version 2.0; see
 the LICENSE file for details, and was developed on behalf of 

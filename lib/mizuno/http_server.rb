@@ -1,7 +1,3 @@
-# Have Jetty log to stdout for the time being.
-java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
-    "org.eclipse.jetty.util.log.StdErrLog")
-
 module Mizuno
     class HttpServer
         include_class 'org.eclipse.jetty.server.Server'
