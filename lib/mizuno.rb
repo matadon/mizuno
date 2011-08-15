@@ -7,6 +7,9 @@
 # Java integration for talking to Jetty.
 require 'java'
 
+# Logging interface
+require 'rjack-slf4j'
+
 # Load Jetty JARs.
 jars = File.join(File.dirname(__FILE__), 'java', '*.jar')
 Dir[jars].each { |j| require j }

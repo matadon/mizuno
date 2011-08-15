@@ -2,6 +2,13 @@
 
 raise("Mizuno only runs on JRuby.") unless (RUBY_PLATFORM =~ /java/)
 
+begin
+  require 'rjack-logback'
+  RJack::Logback.config_console( :stderr => true, :thread => true )
+rescue LoadError => e
+  require 'rjack-slf4j/simple'
+end
+
 require 'rack'
 require 'mizuno'
 
