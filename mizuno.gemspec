@@ -12,16 +12,6 @@ Gem::Specification.new do |spec|
         README.markdown
         LICENSE
         mizuno.gemspec
-        lib/java/jetty-continuation-7.3.0.v20110203.jar
-        lib/java/jetty-http-7.3.0.v20110203.jar
-        lib/java/jetty-io-7.3.0.v20110203.jar
-        lib/java/jetty-jmx-7.3.0.v20110203.jar
-        lib/java/jetty-security-7.3.0.v20110203.jar
-        lib/java/jetty-server-7.3.0.v20110203.jar
-        lib/java/jetty-servlet-7.3.0.v20110203.jar
-        lib/java/jetty-servlets-7.3.0.v20110203.jar
-        lib/java/jetty-util-7.3.0.v20110203.jar
-        lib/java/servlet-api-2.5.jar
         lib/mizuno/http_server.rb
         lib/mizuno/rack_servlet.rb
         lib/mizuno.rb
@@ -31,4 +21,5 @@ Gem::Specification.new do |spec|
     spec.require_paths = [ "lib" ]
     spec.rubygems_version = '1.3.6'
     spec.add_dependency('rack', '>= 1.0.0')
+    spec.add_dependency('rjack-jetty', '~> 7.4')
 end
