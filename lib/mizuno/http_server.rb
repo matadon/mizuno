@@ -69,7 +69,7 @@ module Mizuno
             @server.start
 
             # Stop the server when we get The Signal.
-            trap("SIGINT") { exit }
+            trap("SIGINT") { @server.stop and exit }
 
             # Join with the server thread, so that currently open file
             # descriptors don't get closed by accident.
