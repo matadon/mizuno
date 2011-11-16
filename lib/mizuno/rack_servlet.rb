@@ -1,3 +1,5 @@
+require 'stringio'
+
 #
 # Wraps a Rack application in a Java servlet.
 #
@@ -120,6 +122,14 @@ module Mizuno
             env['rack.multithread'] = true
             env['rack.run_once'] = false
 
+            # The input stream is a wrapper around the Java InputStream.
+            env['rack.input'] = request.getInputStream.to_io.binmode
+
+            # Force encoding if we're on Ruby 1.9
+            env['rack.input'].set_encoding(Encoding.find("ASCII-8BIT")) \
+                if env['rack.input'].respond_to?(:set_encoding)
+#            puts "**** rack.input.encoding: #{env['rack.input'].encoding}"
+
             # Populate the HTTP headers.
             request.getHeaderNames.each do |header_name|
                 header = header_name.upcase.tr('-', '_')
@@ -132,9 +142,6 @@ module Mizuno
                 if env["HTTP_CONTENT_TYPE"]
             env["CONTENT_LENGTH"] = env.delete("HTTP_CONTENT_LENGTH") \
                 if env["HTTP_CONTENT_LENGTH"]
-
-            # The input stream is a wrapper around the Java InputStream.
-            env['rack.input'] = request.getInputStream.to_io
 
             # The output stream defaults to stderr.
             env['rack.errors'] ||= $stderr
