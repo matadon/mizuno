@@ -69,7 +69,7 @@ module Mizuno
             @server.start
 
             # Stop the server when we get The Signal.
-            trap("SIGINT") { @server.stop and exit }
+            trap("SIGINT") { exit }
 
             # Join with the server thread, so that currently open file
             # descriptors don't get closed by accident.
@@ -81,6 +81,7 @@ module Mizuno
         # Shuts down an embedded Jetty instance.
         #
         def self.stop
+            puts "Stopping Jetty..."
             @server.stop
         end
     end
@@ -88,3 +89,6 @@ end
 
 # Register ourselves with Rack when this file gets loaded.
 Rack::Handler.register 'mizuno', 'Mizuno::HttpServer'
+
+# Ensure that we shutdown the server on exit.
+at_exit { Mizuno::HttpServer.stop }
