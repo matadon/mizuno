@@ -9,25 +9,19 @@ Gem::Specification.new do |spec|
     spec.email = 'don@madwombat.com'
     # FIXME: We're not getting put in bin/
     spec.executables = [ "mizuno" ]
-    # FIXME: Find and include these automatically.
-    spec.files = %w( .gitignore
+    spec.files = %w(.gitignore
         README.markdown
         LICENSE
+        Rakefile
+        Gemfile
         mizuno.gemspec
-        lib/java/jetty-continuation-7.3.0.v20110203.jar
-        lib/java/jetty-http-7.3.0.v20110203.jar
-        lib/java/jetty-io-7.3.0.v20110203.jar
-        lib/java/jetty-jmx-7.3.0.v20110203.jar
-        lib/java/jetty-security-7.3.0.v20110203.jar
-        lib/java/jetty-server-7.3.0.v20110203.jar
-        lib/java/jetty-servlet-7.3.0.v20110203.jar
-        lib/java/jetty-servlets-7.3.0.v20110203.jar
-        lib/java/jetty-util-7.3.0.v20110203.jar
-        lib/java/servlet-api-2.5.jar
+        tmp/.gitkeep
         lib/mizuno/http_server.rb
         lib/mizuno/rack_servlet.rb
         lib/mizuno.rb
-        bin/mizuno )
+        bin/mizuno)
+    jars = Dir.entries("lib/java").grep(/\.jar$/)
+    spec.files.concat(jars.map { |j| "lib/java/#{j}" })
     spec.homepage = 'http://github.com/matadon/mizuno'
     spec.has_rdoc = false
     spec.require_paths = [ "lib" ]
