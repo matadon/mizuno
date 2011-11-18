@@ -36,4 +36,5 @@ Gem::Specification.new do |spec|
     spec.add_development_dependency('rspec', '>= 2.7.0')
     spec.add_development_dependency('rspec-core', '>= 2.7.0')
     spec.add_development_dependency('json_pure', '>= 1.6.1')
+    spec.add_development_dependency('nokogiri')
 end
