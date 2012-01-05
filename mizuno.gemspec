@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
     spec.name = "mizuno"
-    spec.version = "0.4.1"
+    spec.version = "0.4.2"
     spec.required_rubygems_version = Gem::Requirement.new(">= 1.2") \
         if spec.respond_to?(:required_rubygems_version=)
     spec.authors = [ "Don Werve" ]

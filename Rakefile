@@ -78,3 +78,22 @@ namespace :jetty do
         puts "Update complete."
     end
 end
+
+namespace :java do
+    desc "Build bundled Java source files."
+    task :build do
+        system(<<-END)
+            javac -classpath lib/java/servlet-api-3.0.jar \
+                src/org/jruby/rack/servlet/RewindableInputStream.java
+            jar cf lib/java/rewindable-input-stream.jar -C src/ \
+                org/jruby/rack/servlet/RewindableInputStream.class
+        END
+    end
+
+    desc "Clean up after building."
+    task :clean do
+        system(<<-END)
+            rm src/org/jruby/rack/servlet/RewindableInputStream.class
+        END
+    end
+end

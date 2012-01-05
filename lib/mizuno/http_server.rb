@@ -84,6 +84,7 @@ module Mizuno
         # Shuts down an embedded Jetty instance.
         #
         def self.stop
+            return unless @server
             puts "Stopping Jetty..."
             @server.stop
         end
