@@ -1,13 +1,20 @@
+require 'mizuno/version'
+require 'mizuno/java_logger'
+
 module Mizuno
     class HttpServer
         include_class 'java.util.Properties'
+        include_class 'java.io.ByteArrayInputStream'
         include_class 'org.apache.log4j.PropertyConfigurator'
         include_class 'org.eclipse.jetty.server.Server'
         include_class 'org.eclipse.jetty.servlet.ServletContextHandler'
         include_class 'org.eclipse.jetty.servlet.ServletHolder'
         include_class 'org.eclipse.jetty.server.nio.SelectChannelConnector'
         include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
-        include_class 'org.eclipse.jetty.servlet.DefaultServlet'
+#        include_class 'org.eclipse.jetty.servlet.DefaultServlet'
+#        include_class 'org.eclipse.jetty.server.handler.HandlerCollection'
+#        include_class 'org.eclipse.jetty.server.handler.RequestLogHandler'
+#        include_class 'org.eclipse.jetty.server.NCSARequestLog'
 
         #
         # Provide accessors so we can set a custom logger and a location
@@ -30,21 +37,26 @@ module Mizuno
         #     String or integer with the port to bind to; defaults 
         #     to 9292.
         #
+        # http://wiki.eclipse.org/Jetty/Tutorial/RequestLog
+        #
         # FIXME: Add SSL suport.
         #
         def HttpServer.run(app, options = {})
             # Symbolize and downcase keys.
-            options = Hash[options.map { |k, v| 
+            @options = options = Hash[options.map { |k, v| 
                 [ k.to_s.downcase.to_sym, v ] }]
+            options[:quiet] ||= true if options[:embedded]
 
             # The Jetty server
             configure_logging(options)
             @server = Server.new
+            @server.setSendServerVersion(false)
 
             # Thread pool
+            threads = options[:threads] || 50
             thread_pool = QueuedThreadPool.new
-            thread_pool.min_threads = [ options[:threads] / 10, 1 ].max
-            thread_pool.max_threads = [ options[:threads], 3 ].max
+            thread_pool.min_threads = [ threads.to_i / 10, 5 ].max
+            thread_pool.max_threads = [ threads.to_i, 10 ].max
             @server.set_thread_pool(thread_pool)
 
             # Connector
@@ -53,23 +65,36 @@ module Mizuno
             connector.setHost(options[:host])
             @server.addConnector(connector)
 
-            # Servlet context.
-            context = ServletContextHandler.new(nil, "/", 
+            # Switch to a different user or group if we were asked to.
+            Runner.setgid(options) if options[:group]
+            Runner.setuid(options) if options[:user]
+
+            # Servlet handler.
+            app_handler = ServletContextHandler.new(nil, "/", 
                 ServletContextHandler::NO_SESSIONS)
 
             # The servlet itself.
             rack_servlet = RackServlet.new
             rack_servlet.rackup(app)
             holder = ServletHolder.new(rack_servlet)
-            context.addServlet(holder, "/")
+            app_handler.addServlet(holder, "/")
 
-            # options[:public]
-            # options[:statistics]
+#            # Our request log.
+#            request_log = NCSARequestLog.new
+#            request_log.setLogTimeZone("GMT")
+#            request_log_handler = RequestLogHandler.new
+#            request_log_handler.setRequestLog(request_log)
+#
+#            # Add handlers in order.
+#            handlers = HandlerCollection.new
+#            handlers.addHandler(request_log_handler)
+#            handlers.addHandler(app_handler)
 
             # Add the context to the server and start.
-            @server.set_handler(context)
+            @server.set_handler(app_handler)
             @server.start
-            puts "#{version} on #{connector.host}:#{connector.port}"
+            $stderr.printf("%s listening on %s:%s\n", version,
+                connector.host, connector.port) unless options[:quiet]
 
             # If we're embeded, we're done.
             return if options[:embedded]
@@ -88,107 +113,55 @@ module Mizuno
         #
         def HttpServer.stop
             return unless @server
-            puts "Stopping Jetty..."
+            $stderr.print "Stopping Jetty..." unless @options[:quiet]
             @server.stop
+            $stderr.puts "done." unless @options[:quiet]
         end
 
         #
         # Returns the full version string.
         #
         def HttpServer.version
-            "Mizuno 0.4.2 (Jetty #{Server.getVersion})"
+            "Mizuno #{Mizuno::VERSION} (Jetty #{Server.getVersion})"
         end
 
-#        include_class 'org.slf4j.LoggerFactory'
-
-#        include_class "org.eclipse.jetty.util.log.Slf4jLog"
-        include_class 'org.apache.log4j.ConsoleAppender'
-        include_class 'org.apache.log4j.FileAppender'
-        include_class 'org.apache.log4j.PatternLayout'
-        include_class 'java.io.ByteArrayInputStream'
-
         #
-        # Set up logging through Log4J and Logback, which is about a
-        # million times more complicated than Logger.
+        # Configure Log4J.
         #
         def HttpServer.configure_logging(options)
-            # --log will do a combined log
-            # --request-log will split off the request log
+            # Default logging threshold.
+            limit = options[:warn] ? "WARN" : "ERROR"
+            limit = "DEBUG" if ($DEBUG or options[:debug])
+            target = options[:log].is_a?(String) ? 'FILE' : 'CONSOLE'
 
-            properties = Properties.new
-            properties.load(ByteArrayInputStream.new(<<-END.to_java_bytes))
-                # Default to logging everything to the console.
-                log4j.rootCategory = INFO, CONSOLE
-
-                # Jetty logs go to the console as well.
-                log4j.logger.org.eclipse.jetty.util.log = CONSOLE
-
-                # CONSOLE is set to be a ConsoleAppender using a PatternLayout.
+            # Base logging configuration.
+            config = <<-END
+                log4j.rootCategory = #{limit}, #{target}
+                log4j.logger.org.eclipse.jetty.util.log = #{limit}, #{target}
                 log4j.appender.CONSOLE = org.apache.log4j.ConsoleAppender
-                log4j.appender.CONSOLE.Threshold = INFO
+                log4j.appender.CONSOLE.Threshold = #{limit}
                 log4j.appender.CONSOLE.layout = org.apache.log4j.PatternLayout
                 log4j.appender.CONSOLE.layout.ConversionPattern = %d %p %m
+            END
 
-                # FILE is set to be a File appender using a PatternLayout.
+            # Are we logging to a file?
+            config.concat(<<-END) if (target == 'FILE')
                 log4j.appender.FILE = org.apache.log4j.FileAppender
-                log4j.appender.FILE.File = mizuno.log
+                log4j.appender.FILE.File = #{options[:log]}
                 log4j.appender.FILE.Append = true
-                log4j.appender.FILE.Threshold = INFO
+                log4j.appender.FILE.Threshold = #{limit}
                 log4j.appender.FILE.layout = org.apache.log4j.PatternLayout
                 log4j.appender.FILE.layout.ConversionPattern = %d %p %m
             END
+
+            # Set up Log4J via Properties.
+            properties = Properties.new
+            properties.load(ByteArrayInputStream.new(config.to_java_bytes))
             PropertyConfigurator.configure(properties)
 
-#            root = Java.org.apache.log4j.Logger.getRootLogger
-#            console = ConsoleAppender.new(PatternLayout.new( \
-#                PatternLayout::TTCC_CONVERSION_PATTERN))
-#            root.addAppender(console)
-
-            # Have Jetty log to stdout for the time being.
-            #java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
-            #    "org.eclipse.jetty.util.log.StdErrLog")
-
-            # http://synapticloop.com/blog/2011/01/setting-up-or-turning-off-jetty-7-logging-programmatically/
-            # Direct output to a logfile if specified.
-
-            # Where do we put our logs?
-#            logfile = File.expand_path(log = @config['logfile'])
-            logfile = 'mizuno.log'
-
-
-#            org.eclipse.jetty.util.log.class
-
-            # Configure Log4J.
-            # log4j.logger.org.eclipse.jetty=INFO
-#            properties = Properties.new
-#            properties.setProperty('org.eclipse.jetty.LEVEL', 'WARN')
-#            properties.setProperty('log4j.logger.org.eclipse.jetty',
-#                'WARNING')
-#            properties.setProperty('log4j.rootLogger', 'debug, file')
-#            properties.setProperty('log4j.appender.file',
-#                'org.apache.log4j.FileAppender')
-#            properties.setProperty('log4j.appender.file.layout',
-#               'org.apache.log4j.SimpleLayout')
-#            properties.setProperty('log4j.appender.file.file',
-#                logfile)
-#            properties.setProperty('log4j.appender.file.append',
-#                'true')
-#            PropertyConfigurator.configure(properties)
-
-#            java.lang.System.setProperty("org.eclipse.jetty.util.log.class", 
-#                "org.eclipse.jetty.util.log.Slf4jLog")
-
-Java.java.lang.System.setProperty( \
-    'log4j.logger.org.apache.log4j.PropertyConfigurator', 'INFO')
-Java.java.lang.System.setProperty( \
-    'log4j.logger.org.apache.log4j.config.PropertySetter', 'INFO')
-Java.java.lang.System.setProperty( \
-    'log4j.logger.org.apache.log4j.FileAppender', 'INFO')
-
-#            logger = Slf4jLog.new
-#            Java.org.eclipse.jetty.util.log.Log.setLog(logger)
+            # Use log4j for our logging as well.
+            @logger = JavaLogger.new
         end
-
     end
 end
 
