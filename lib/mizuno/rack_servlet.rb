@@ -147,7 +147,7 @@ module Mizuno
                 if env["HTTP_CONTENT_LENGTH"]
 
             # The output stream defaults to stderr.
-            env['rack.errors'] ||= $stderr
+            env['rack.errors'] ||= HttpServer.logger
 
             # All done, hand back the Rack request.
             return(env)
@@ -233,7 +233,10 @@ module Mizuno
             begin
                 yield
             rescue => error
-                $stderr.puts("Exception: #{error}")
+                message = "Exception: #{error}"
+                message << "\n#{error.backtrace.join("\n")}" \
+                    if (error.respond_to?(:backtrace))
+                HttpServer.logger.error(message)
                 return if response.isCommitted
                 response.reset
                 response.setStatus(500)

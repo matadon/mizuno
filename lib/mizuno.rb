@@ -11,7 +11,7 @@ Dir[jars].each { |j| require j }
 # Tell log4j not to complain to the console about a missing
 # log4j.properties file, as we configure it programmatically in
 # Mizuno::HttpServer (http://stackoverflow.com/questions/6849887)
-Java.org.apache.log4j.Logger.getRootLogger().setLevel( \
+Java.org.apache.log4j.Logger.getRootLogger.setLevel( \
     Java.org.apache.log4j.Level::INFO)
 
 require 'rack'

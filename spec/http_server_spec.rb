@@ -11,7 +11,8 @@ describe Mizuno::HttpServer do
             use Rack::Lint
             run app
         end
-        @options = { :host => '127.0.0.1', :port => 9201, :embedded => true }
+        @options = { :host => '127.0.0.1', :port => 9201, 
+            :embedded => true, :threads => 10 }
         Net::HTTP.version_1_2
         Mizuno::HttpServer.run(@rackup, @options)
     end
@@ -75,9 +76,9 @@ describe Mizuno::HttpServer do
         content['rack.java.servlet'].should be_true
     end
 
-    it "is clearly Jetty" do
+    it "hides its server version" do
         response = get("/ping")
-        response['server'].should =~ /jetty/i
+        response['server'].should be_nil
     end
 
     it "sets the server port and hostname" do
@@ -126,7 +127,7 @@ describe Mizuno::HttpServer do
     it "handles async requests" do
         lock, buffer = Mutex.new, Array.new
 
-        clients = 10.times.map do |index|
+        clients = 20.times.map do |index|
             Thread.new do 
                 Net::HTTP.start(@options[:host], @options[:port]) do |http|
                     http.read_timeout = 1
@@ -140,12 +141,12 @@ describe Mizuno::HttpServer do
 
         lock.synchronize { buffer.should be_empty }
         post("/push", 'message' => "one") and sleep(0.1)
-        lock.synchronize { buffer.count.should == 10 }
-        post("/push", 'message' => "two") and sleep(0.1)
         lock.synchronize { buffer.count.should == 20 }
+        post("/push", 'message' => "two") and sleep(0.1)
+        lock.synchronize { buffer.count.should == 40 }
         post("/push", 'message' => "three") and sleep(0.1)
-        lock.synchronize { buffer.count.should == 30 }
-        post("/push", 'message' => "eof") and sleep(0.1)
+        lock.synchronize { buffer.count.should == 60 }
+        post("/push", 'message' => "eof") and sleep(0.5)
         clients.each { |c| c.join }
     end
 
