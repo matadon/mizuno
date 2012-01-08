@@ -4,6 +4,12 @@
 # Written by Don Werve <don@madwombat.com>
 #
 
+# Save our launch environment for spawning children later.
+module Mizuno
+    LAUNCH_ENV = $LOAD_PATH.map { |i| "-I#{i}" }.push($0)
+end
+
+# Load up Java dependencies.
 require 'java'
 jars = File.join(File.dirname(__FILE__), 'java', '*.jar')
 Dir[jars].each { |j| require j }

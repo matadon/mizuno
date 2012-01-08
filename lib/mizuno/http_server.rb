@@ -1,3 +1,4 @@
+require 'mizuno/version'
 require 'mizuno/java_logger'
 
 module Mizuno
@@ -64,6 +65,10 @@ module Mizuno
             connector.setHost(options[:host])
             @server.addConnector(connector)
 
+            # Switch to a different user or group if we were asked to.
+            Runner.setgid(options) if options[:group]
+            Runner.setuid(options) if options[:user]
+
             # Servlet handler.
             app_handler = ServletContextHandler.new(nil, "/", 
                 ServletContextHandler::NO_SESSIONS)
@@ -88,7 +93,7 @@ module Mizuno
             # Add the context to the server and start.
             @server.set_handler(app_handler)
             @server.start
-            $stderr.printf("%s listening on %s:%s", version,
+            $stderr.printf("%s listening on %s:%s\n", version,
                 connector.host, connector.port) unless options[:quiet]
 
             # If we're embeded, we're done.
@@ -117,36 +122,46 @@ module Mizuno
         # Returns the full version string.
         #
         def HttpServer.version
-            "Mizuno 0.4.2 (Jetty #{Server.getVersion})"
+            "Mizuno #{Mizuno::VERSION} (Jetty #{Server.getVersion})"
         end
 
         #
         # Configure Log4J.
         #
         def HttpServer.configure_logging(options)
+            return if @logger
+
             # Default logging threshold.
             limit = options[:warn] ? "WARN" : "ERROR"
             limit = "DEBUG" if ($DEBUG or options[:debug])
-            target = options[:log].is_a?(String) ? 'FILE' : 'CONSOLE'
 
             # Base logging configuration.
             config = <<-END
-                log4j.rootCategory = #{limit}, #{target}
-                log4j.logger.org.eclipse.jetty.util.log = #{limit}, #{target}
-                log4j.appender.CONSOLE = org.apache.log4j.ConsoleAppender
-                log4j.appender.CONSOLE.Threshold = #{limit}
-                log4j.appender.CONSOLE.layout = org.apache.log4j.PatternLayout
-                log4j.appender.CONSOLE.layout.ConversionPattern = %d %p %m
+                log4j.rootCategory = #{limit}, default
+                log4j.logger.org.eclipse.jetty.util.log = #{limit}, default
+                log4j.logger.ruby = INFO, ruby
+                log4j.appender.default.Threshold = #{limit}
+                log4j.appender.default.layout = org.apache.log4j.PatternLayout
+                log4j.appender.default.layout.ConversionPattern = %d %p %m
+                log4j.appender.ruby.Threshold = INFO
+                log4j.appender.ruby.layout = org.apache.log4j.PatternLayout
+                log4j.appender.ruby.layout.ConversionPattern = %m
+            END
+
+            # Should we log to the console?
+            config.concat(<<-END) unless options[:log]
+                log4j.appender.default = org.apache.log4j.ConsoleAppender
+                log4j.appender.ruby = org.apache.log4j.ConsoleAppender
             END
 
             # Are we logging to a file?
-            config.concat(<<-END) if (target == 'FILE')
-                log4j.appender.FILE = org.apache.log4j.FileAppender
-                log4j.appender.FILE.File = #{options[:log]}
-                log4j.appender.FILE.Append = true
-                log4j.appender.FILE.Threshold = #{limit}
-                log4j.appender.FILE.layout = org.apache.log4j.PatternLayout
-                log4j.appender.FILE.layout.ConversionPattern = %d %p %m
+            config.concat(<<-END) if options[:log]
+                log4j.appender.default = org.apache.log4j.FileAppender
+                log4j.appender.default.File = #{options[:log]}
+                log4j.appender.default.Append = true
+                log4j.appender.ruby = org.apache.log4j.FileAppender
+                log4j.appender.ruby.File = #{options[:log]}
+                log4j.appender.ruby.Append = true
             END
 
             # Set up Log4J via Properties.

@@ -3,8 +3,6 @@
 raise("Mizuno only runs on JRuby.") unless (RUBY_PLATFORM =~ /java/)
 
 require 'rubygems'
-require 'rack'
-require 'choice'
 require 'mizuno'
 require 'mizuno/runner'
 
