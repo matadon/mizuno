@@ -149,7 +149,7 @@ Choice.options do
         long '--version'
         desc 'Show version'
         action do
-            puts Mizuno::HttpServer.version
+            $stderr.puts Mizuno::HttpServer.version
             exit            
         end
     end

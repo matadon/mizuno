@@ -5,6 +5,7 @@ require 'mizuno/choices'
 require 'childprocess'
 require 'fileutils'
 require 'etc'
+require 'rack'
 
 module Mizuno
     #
@@ -73,8 +74,10 @@ module Mizuno
 
             # Fire up Mizuno as if it was called from Rackup.
             Dir.chdir(options[:root])
+            HttpServer.configure_logging(options)
             server = Rack::Server.new
-            server.options = options.merge(:server => 'mizuno')
+            server.options = options.merge(:server => 'mizuno',
+                :environment => options[:env])
             server.start
         end
 
@@ -144,7 +147,7 @@ module Mizuno
         #
         def Runner.kill(options)
             pid = Runner.pid(options) or die("Mizuno isn't running.")
-            puts "Terminating Mizuno with extreme prejudice..."
+            $stderr.puts "Terminating Mizuno with extreme prejudice..."
             Process.kill("TERM", pid)
             die("failed") unless wait_for_server_to_die(options)
             FileUtils.rm(options[:pidfile])

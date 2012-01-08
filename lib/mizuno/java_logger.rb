@@ -10,12 +10,12 @@ module Mizuno
             Logger::FATAL => Java.org.apache.log4j.Level::FATAL }
 
         def initialize
-            @log4j = Java.org.apache.log4j.Logger.getRootLogger
+            @log4j = Java.org.apache.log4j.Logger.getLogger('ruby')
         end
 
         def add(severity, message = nil, progname = nil)
             content = (message or (block_given? and yield) or progname)
-            @log4j.log(LEVELS[level], content)
+            @log4j.log(LEVELS[severity], content)
         end
 
         def puts(message)
@@ -23,10 +23,14 @@ module Mizuno
         end
 
         def write(message)
-            add(ERROR, message)
+            add(INFO, message)
         end
 
         def flush
+            # No-op.
+        end
+
+        def close
             # No-op.
         end
     end

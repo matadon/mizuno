@@ -1,4 +1,5 @@
 require 'stringio'
+require 'rack/response'
 
 #
 # Wraps a Rack application in a Java servlet.
@@ -146,8 +147,9 @@ module Mizuno
             env["CONTENT_LENGTH"] = env.delete("HTTP_CONTENT_LENGTH") \
                 if env["HTTP_CONTENT_LENGTH"]
 
-            # The output stream defaults to stderr.
+            # Route errors through the logger.
             env['rack.errors'] ||= HttpServer.logger
+            env['rack.logger'] ||= HttpServer.logger
 
             # All done, hand back the Rack request.
             return(env)
