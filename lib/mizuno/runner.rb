@@ -186,22 +186,19 @@ module Mizuno
         # returns true if we could connect and didn't get a server
         # error, false otherwise.
         #
-        # FIXME: Check response status.
-        #
         def Runner.wait_for_server(options, timeout = 10)
             begin
                 Net::HTTP.start(options[:host], options[:port]) do |http|
                     http.read_timeout = timeout
                     response = http.get("/")
-                    puts "**** response: #{response}"
+                    return(response.code.to_i < 500)
                 end
-                return(true)
             rescue Errno::ECONNREFUSED => error
                 return(false) unless ((timeout -= 0.5) > 0)
                 sleep(0.5)
                 retry
             rescue => error
-                puts "**** http error: #{error}"
+                puts "HTTP Error '#{error}'"
                 return(false)
             end
         end

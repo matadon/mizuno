@@ -12,7 +12,6 @@ require 'json/pure'
 require 'rack/urlmap'
 require 'rack/lint'
 require 'support/test_app'
-require 'support/hello_app'
 
 Thread.abort_on_exception = true
 

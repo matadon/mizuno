@@ -72,7 +72,7 @@ Choice.options do
     option :log do
         long '--log'
         desc 'logfile (defaults to stderr)'
-        default $stderr
+        default nil
     end
 
     separator ''
