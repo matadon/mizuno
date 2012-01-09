@@ -43,7 +43,8 @@ namespace :jetty do
         # Find replacements from our downloaded tarball for each of our jars.
         replacements = {}
         Dir.entries(jar_path).each do |entry|
-            next unless (entry =~ /^\w.*\d\.jar$/)
+            next unless ((entry =~ /^jetty-\w.*\d\.jar$/) \
+                or (entry =~ /^servlet-api.*\d\.jar$/))
             name = entry.sub(/\-\d.*$/, '')
             matcher = /\/#{name}\-[^\/]+\d\.jar$/
             archive_file = inventory.find { |i| i =~ matcher }

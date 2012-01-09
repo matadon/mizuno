@@ -105,7 +105,7 @@ module Mizuno
             File.open(options[:pidfile], 'w') { |f| f.puts(child.pid) }
 
             # Wait until the server starts or we time out waiting for it.
-            exit if wait_for_server(options)
+            exit if wait_for_server(options, 60)
             child.stop
             die("Failed to start Mizuno.")
         end
