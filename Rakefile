@@ -6,6 +6,8 @@ RSpec::Core::RakeTask.new(:spec)
 
 task :default => :spec
 
+# http://rubydoc.info/gems/pompompom/1.1.3/frames
+
 namespace :jetty do
     desc "Grab the latest Jetty from its Maven repository."
     task :update do
