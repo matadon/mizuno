@@ -1,3 +1,5 @@
+require 'stringio'
+
 #
 # Wraps a Rack application in a Java servlet.
 #
@@ -13,6 +15,7 @@ module Mizuno
     class RackServlet < HttpServlet
         include_class java.io.FileInputStream
         include_class org.eclipse.jetty.continuation.ContinuationSupport
+        include_class org.jruby.rack.servlet.RewindableInputStream
 
         #
         # Sets the Rack application that handles requests sent to this
@@ -38,47 +41,49 @@ module Mizuno
         # empty body, we declare the async response finished.
         #
         def service(request, response)
-            # Turn the ServletRequest into a Rack env hash
-            env = servlet_to_rack(request)
+            handle_exceptions(response) do
+                # Turn the ServletRequest into a Rack env hash
+                env = servlet_to_rack(request)
 
-            # Handle asynchronous responses via Servlet continuations.
-            continuation = ContinuationSupport.getContinuation(request)
+                # Handle asynchronous responses via Servlet continuations.
+                continuation = ContinuationSupport.getContinuation(request)
 
-            # If this is an expired connection, do nothing.
-            return if continuation.isExpired
+                # If this is an expired connection, do nothing.
+                return if continuation.isExpired
 
-            # We should never be re-dispatched.
-            raise("Request re-dispatched.") unless continuation.isInitial
+                # We should never be re-dispatched.
+                raise("Request re-dispatched.") unless continuation.isInitial
 
-            # Add our own special bits to the rack environment so that 
-            # Rack middleware can have access to the Java internals.
-            env['rack.java.servlet'] = true
-            env['rack.java.servlet.request'] = request
-            env['rack.java.servlet.response'] = response
-            env['rack.java.servlet.continuation'] = continuation
+                # Add our own special bits to the rack environment so that 
+                # Rack middleware can have access to the Java internals.
+                env['rack.java.servlet'] = true
+                env['rack.java.servlet.request'] = request
+                env['rack.java.servlet.response'] = response
+                env['rack.java.servlet.continuation'] = continuation
 
-            # Add an callback that can be used to add results to the
-            # response asynchronously.
-            env['async.callback'] = lambda do |rack_response|
-                servlet_response = continuation.getServletResponse
-                rack_to_servlet(rack_response, servlet_response) \
-                    and continuation.complete
-            end
-
-            # Execute the Rack request.
-            catch(:async) do
-                rack_response = @app.call(env)
-               
-                # For apps that don't throw :async.
-                unless(rack_response[0] == -1)
-                    # Nope, nothing asynchronous here.
-                    rack_to_servlet(rack_response, response)
-                    return
+                # Add an callback that can be used to add results to the
+                # response asynchronously.
+                env['async.callback'] = lambda do |rack_response|
+                    servlet_response = continuation.getServletResponse
+                    rack_to_servlet(rack_response, servlet_response) \
+                        and continuation.complete
                 end
-            end
 
-            # If we got here, this is a continuation.
-            continuation.suspend(response)
+                # Execute the Rack request.
+                catch(:async) do
+                    rack_response = @app.call(env)
+                   
+                    # For apps that don't throw :async.
+                    unless(rack_response[0] == -1)
+                        # Nope, nothing asynchronous here.
+                        rack_to_servlet(rack_response, response)
+                        return
+                    end
+                end
+
+                # If we got here, this is a continuation.
+                continuation.suspend(response)
+            end
         end
 
         private
@@ -120,6 +125,14 @@ module Mizuno
             env['rack.multithread'] = true
             env['rack.run_once'] = false
 
+            # The input stream is a wrapper around the Java InputStream.
+            env['rack.input'] = RewindableInputStream.new( \
+                request.getInputStream).to_io.binmode
+
+            # Force encoding if we're on Ruby 1.9
+            env['rack.input'].set_encoding(Encoding.find("ASCII-8BIT")) \
+                if env['rack.input'].respond_to?(:set_encoding)
+
             # Populate the HTTP headers.
             request.getHeaderNames.each do |header_name|
                 header = header_name.upcase.tr('-', '_')
@@ -133,11 +146,8 @@ module Mizuno
             env["CONTENT_LENGTH"] = env.delete("HTTP_CONTENT_LENGTH") \
                 if env["HTTP_CONTENT_LENGTH"]
 
-            # The input stream is a wrapper around the Java InputStream.
-            env['rack.input'] = request.getInputStream.to_io
-
             # The output stream defaults to stderr.
-            env['rack.errors'] ||= $stderr
+            env['rack.errors'] ||= HttpServer.logger
 
             # All done, hand back the Rack request.
             return(env)
@@ -172,7 +182,7 @@ module Mizuno
             # data out on an async request.
             unless(response.isCommitted)
                 # Set the HTTP status code.
-                response.setStatus(status)
+                response.setStatus(status.to_i)
 
                 # Did we get a Content-Length header?
                 content_length = headers.delete('Content-Length')
@@ -214,6 +224,23 @@ module Mizuno
 
             # All done.
             output.flush
+        end
+
+        #
+        # Handle exceptions, returning a generic 500 error response.
+        #
+        def handle_exceptions(response)
+            begin
+                yield
+            rescue => error
+                message = "Exception: #{error}"
+                message << "\n#{error.backtrace.join("\n")}" \
+                    if (error.respond_to?(:backtrace))
+                HttpServer.logger.error(message)
+                return if response.isCommitted
+                response.reset
+                response.setStatus(500)
+            end
         end
     end
 end

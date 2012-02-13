@@ -31,6 +31,7 @@ There's also a few features that I have yet to implement:
 
 1. Route Jetty's logs into Rack::Logger.
 2. Add hooks for realtime monitoring of server performance.
+3. Fast restarts of the Rack application.
 
 Mizuno is licensed under the Apache Public License, version 2.0; see
 the LICENSE file for details, and was developed on behalf of 
