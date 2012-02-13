@@ -186,7 +186,7 @@ module Mizuno
         # returns true if we could connect and didn't get a server
         # error, false otherwise.
         #
-        def Runner.wait_for_server(options, timeout = 10)
+        def Runner.wait_for_server(options, timeout = 120)
             begin
                 Net::HTTP.start(options[:host], options[:port]) do |http|
                     http.read_timeout = timeout
@@ -208,7 +208,7 @@ module Mizuno
         # offline. If we hit _timeout_ seconds and the server is still
         # responding, returns false.
         #
-        def Runner.wait_for_server_to_die(options, timeout = 10)
+        def Runner.wait_for_server_to_die(options, timeout = 120)
             begin
                 while(timeout > 0)
                     Net::HTTP.start(options[:host], options[:port]) do |http|
