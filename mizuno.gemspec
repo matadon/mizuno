@@ -18,7 +18,6 @@ Gem::Specification.new do |spec|
         Rakefile
         Gemfile
         mizuno.gemspec
-        tmp/.gitkeep
         lib/mizuno/choices.rb
         lib/mizuno/http_server.rb
         lib/mizuno/java_logger.rb
