@@ -1,4 +1,4 @@
-$:.push File.expand_path("lib/mizuno", __FILE__)
+$:.push File.expand_path("../lib/mizuno", __FILE__)
 require 'version'
 
 Gem::Specification.new do |spec|
