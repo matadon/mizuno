@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2010-2012 Engine Yard, Inc.
+ * Copyright (c) 2007-2009 Sun Microsystems, Inc.
+ * This source code is available under the MIT license.
+ * See the file LICENSE.txt for details.
+ */
+
 
 package org.jruby.rack.servlet;
 
@@ -6,6 +13,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+
 import javax.servlet.ServletInputStream;
 
 /**
@@ -67,8 +75,7 @@ public class RewindableInputStream extends ServletInputStream {
      * Wrap an input stream to be king and rewind ...
      * @param input 
      * @param bufferSize initial buffer size
-     * @param maxBufferSize maximum buffer size (when reached content 
-     *     gets written into a file)
+     * @param maxBufferSize maximum buffer size (when reached content gets written into a file)
      */
     public RewindableInputStream(InputStream input, int bufferSize, int maxBufferSize) {
         this.input = input; // super(input);
@@ -131,7 +138,7 @@ public class RewindableInputStream extends ServletInputStream {
         if (fillBuffer(1) == -1) return -1;  // EOF
         
         //this.position++; // track stream position
-        return this.buffer.get();
+        return this.buffer.get() & 0xFF;
     }
 
     @Override
@@ -345,4 +352,5 @@ public class RewindableInputStream extends ServletInputStream {
             return this.buffer.position();
         }        
     }
+    
 }
