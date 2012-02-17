@@ -1,3 +1,8 @@
+require 'rack'
+require 'rack/request'
+require 'rack/response'
+require 'json/pure'
+
 #
 # A tiny Rack application for testing the Mizuno webserver.  Each of the
 # following paths can be used to test webserver behavior:
@@ -14,9 +19,13 @@
 #
 # /pull:: Recieves messages sent via /push using async.
 #
+# /version:: Returns the timestamp of when the app was loaded
+#
 # A request to any endpoint not listed above will return a 404 error.
 #
 class TestApp
+    VERSION = Time.now.to_i
+
     def initialize
         @subscribers = Array.new
     end
@@ -35,6 +44,12 @@ class TestApp
         end
     end
 
+    def version(request)
+        version = TestApp::VERSION.to_s
+        [ 200, { "Content-Type" => "text/plain", 
+            "Content-Length" => version.length.to_s }, [ version  ] ]
+    end
+
     def ping(request)
         [ 200, { "Content-Type" => "text/plain", 
             "Content-Length" => "2" }, [ "OK" ] ]
@@ -49,7 +64,7 @@ class TestApp
     def echo(request)
         response = Rack::Response.new
         env = request.env.merge('request.params' => request.params)
-        response.write(env.to_yaml)
+        response.write(env.to_json)
         response.finish
     end
 
@@ -59,14 +74,9 @@ class TestApp
         @subscribers.reject! do |subscriber|
             begin
                 response = Rack::Response.new
-                if(message.empty?)
-                    subscriber.call(response.finish)
-                    next(true)
-                else
-                    response.write(message)
-                    subscriber.call(response.finish)
-                    next(false)
-                end
+                response.body = message
+                subscriber.call(response.finish)
+                next(false)
             rescue java.io.IOException => error
                 next(true)
             end
@@ -94,6 +104,12 @@ class TestApp
         checksum = Digest::MD5.hexdigest(Base64.decode64(data))
         response = Rack::Response.new
         response.write(checksum)
+        response.finish
+    end
+
+    def chunked(request)
+        response = Rack::Response.new
+        response.body = 'chunked'
         response.finish
     end
 end
