@@ -16,7 +16,7 @@ module Mizuno
                 base.send(:extend, StubbedClassMethods)
             else
                 base.send(:extend, UnixClassMethods)
-                base.class_eval do
+                base.send(:class_eval) do
                     extend FFI::Library
                     ffi_lib 'c'
                     attach_function :_setuid, :setuid, [ :uint ], :int
@@ -100,6 +100,7 @@ module Mizuno
             # Fire up Mizuno as if it was called from Rackup.
             Dir.chdir(options[:root])
             HttpServer.configure_logging(options)
+            ENV['RACK_ENV'] = options[:env]
             server = Rack::Server.new
             server.options = options.merge(:server => 'mizuno',
                 :environment => options[:env])
