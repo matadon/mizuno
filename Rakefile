@@ -42,7 +42,7 @@ namespace :jetty do
         # Inventory contents of the tarball we picked up.
         inventory = `tar tzf #{tempfile}`.split(/\n/)
 
-        # Find replacements from our downloaded tarball for each of our jars.
+        # Figure out which JARs we should replce with tarball contents.
         replacements = {}
         Dir.entries(jar_path).each do |entry|
             next unless ((entry =~ /^jetty-\w.*\d\.jar$/) \
@@ -50,8 +50,7 @@ namespace :jetty do
             name = entry.sub(/\-\d.*$/, '')
             matcher = /\/#{name}\-[^\/]+\d\.jar$/
             archive_file = inventory.find { |i| i =~ matcher }
-            raise("Archive missing replacement for #{entry}") \
-                unless archive_file
+            next unless archive_file
             replacements[entry] = archive_file
         end
 

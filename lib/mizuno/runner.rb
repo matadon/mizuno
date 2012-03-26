@@ -8,6 +8,59 @@ require 'etc'
 require 'rack'
 
 module Mizuno
+    require 'rbconfig'
+
+    module Daemonizer
+        def self.included?(base)
+            if(Config::CONFIG['host_os'] =~ /mswin|mingw/)
+                base.send(:extend, StubbedClassMethods)
+            else
+                base.send(:extend, UnixClassMethods)
+                base.send(:class_eval) do
+                    extend FFI::Library
+                    ffi_lib 'c'
+                    attach_function :_setuid, :setuid, [ :uint ], :int
+                    attach_function :_setgid, :setgid, [ :uint ], :int
+                end
+            end
+
+        end
+
+        module UnixClassMethods
+            #
+            # Switch the process over to a new user id; will abort the
+            # process if it fails. _options_ is the full list of options
+            # passed to a server.
+            #
+            def setuid(options)
+                entry = Etc.getpwnam(options[:user])
+                die("Can't find --user named '#{options[:user]}'") \
+                    unless entry
+                return unless (_setuid(entry.uid) != 0)
+                die("Can't switch to user '#{options[:user]}'")
+            end
+
+            #
+            # Like setuid, but for groups.
+            #
+            def setgid(options)
+                entry = Etc.getgrnam(options[:group])
+                die("Can't find --group named '#{options[:group]}'") \
+                    unless entry
+                return unless (_setgid(entry.gid) != 0)
+                die("Can't switch to group '#{options[:group]}'")
+            end
+        end
+
+        module StubbedClassMethods
+            def setuid(options)
+            end
+
+            def setgid(options)
+            end
+        end
+    end
+
     #
     # Launches Mizuno when called from the command-line, and handles
     # damonization via FFI.
@@ -15,35 +68,7 @@ module Mizuno
     # Daemonization code based on Spoon.
     #
     class Runner
-        extend FFI::Library
-
-        ffi_lib 'c'
-            
-        attach_function :_setuid, :setuid, [ :uint ], :int
-
-        attach_function :_setgid, :setgid, [ :uint ], :int
-
-        #
-        # Switch the process over to a new user id; will abort the
-        # process if it fails. _options_ is the full list of options
-        # passed to a server.
-        #
-        def Runner.setuid(options)
-            entry = Etc.getpwnam(options[:user])
-            die("Can't find --user named '#{options[:user]}'") unless entry
-            return unless (_setuid(entry.uid) != 0)
-            die("Can't switch to user '#{options[:user]}'")
-        end
-
-        #
-        # Like setuid, but for groups.
-        #
-        def Runner.setgid(options)
-            entry = Etc.getgrnam(options[:group])
-            die("Can't find --group named '#{options[:group]}'") unless entry
-            return unless (_setgid(entry.gid) != 0)
-            die("Can't switch to group '#{options[:group]}'")
-        end
+        include Daemonizer
 
         #
         # Launch Jetty, optionally as a daemon.
@@ -75,6 +100,7 @@ module Mizuno
             # Fire up Mizuno as if it was called from Rackup.
             Dir.chdir(options[:root])
             HttpServer.configure_logging(options)
+            ENV['RACK_ENV'] = options[:env]
             server = Rack::Server.new
             server.options = options.merge(:server => 'mizuno',
                 :environment => options[:env])
@@ -189,7 +215,7 @@ module Mizuno
         # returns true if we could connect and didn't get a server
         # error, false otherwise.
         #
-        def Runner.wait_for_server(options, timeout = 10)
+        def Runner.wait_for_server(options, timeout = 120)
             begin
                 Net::HTTP.start(options[:host], options[:port]) do |http|
                     http.read_timeout = timeout
@@ -211,7 +237,7 @@ module Mizuno
         # offline. If we hit _timeout_ seconds and the server is still
         # responding, returns false.
         #
-        def Runner.wait_for_server_to_die(options, timeout = 10)
+        def Runner.wait_for_server_to_die(options, timeout = 120)
             begin
                 while(timeout > 0)
                     Net::HTTP.start(options[:host], options[:port]) do |http|
