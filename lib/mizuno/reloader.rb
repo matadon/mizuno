@@ -8,93 +8,126 @@ module Mizuno
     # like Rack::Reloader, but rather than checking for any changed
     # file, only looks at one specific file.
     #
-    # Also allows for explicit reloading via a class method.
+    # Also allows for explicit reloading via a class method, as well as
+    # by sending a SIGHUP to the process.
     # 
     class Reloader
         class << self
-            attr_accessor :logger, :trigger
+            attr_accessor :logger, :trigger, :reloaders
+        end
+
+        def Reloader.reload!
+            reloaders.each { |r| r.reload!(true) }
         end
 
         def initialize(app, interval = 1)
+            Thread.exclusive do
+                self.class.reloaders ||= []
+                self.class.reloaders << self
+                self.class.logger ||= Mizuno::HttpServer.logger
+            end
+
             @app = app
             @interval = interval
             @trigger = self.class.trigger
-            @logger = self.class.logger || $stderr
-            @updated = @threshold = Time.now
-            @files = {}
+            @logger = self.class.logger
+            @updated = @threshold = Time.now.to_i
         end
 
+        #
+        # Reload @app on request.
+        #
         def call(env)
-            Thread.exclusive { reload! } if (Time.now > @threshold)
+            reload!
             @app.call(env)
         end
 
         #
-        # Reloads the application iff ou
+        # Reloads the application if (a) we haven't reloaded in
+        # @interval seconds, (b) the trigger file has been touched
+        # since our last check, and (c) some other thread hasn't handled
+        # the update.
         #
-        def reload!(stderr = $stderr)
-            @threshold += interval
-            return unless (timestamp = mtime(@trigger))
-            return unless (timestamp > @updated)
+        def reload!(force = false)
+            return unless (Time.now.to_i > @threshold)
+            return unless (force or (timestamp = mtime(@trigger)))
 
-            paths = [ './', *$LOAD_PATH ].uniq
-            files = [ $0, *$LOADED_FEATURES ].uniq.map do |file|
-                next if file =~ /\.(so|bundle)$/
-                @files[file] = mtime(find(file, paths))
+            Thread.exclusive do
+                return unless (force or (timestamp > @updated))
+                timestamp ||= Time.now.to_i
+                @threshold += @interval
 
-                # Wrapped loader, doesn't actually load the file.
-                load(file, true)
+                # Check updated files to ensure they're loadable.
+                missing, errors = 0, 0
+                files = find_files_for_reload do |file, file_mtime|
+                    next(missing += 1 and nil) unless file_mtime
+                    next unless (file_mtime >= @updated)
+                    next(errors += 1 and nil) unless verify(file)
+                    file
+                end
 
-                yield(found, mtime)
+                # Cowardly fail if we can't load something.
+                @logger.debug("#{missing} files missing during reload.") \
+                    if (missing > 0)
+                return(@logger.error("#{errors} errors, not reloading.")) \
+                    if (errors > 0)
+
+                # Reload everything that's changed.
+                files.each do |file|
+                    next unless file
+                    @logger.info("Reloading #{file}")
+                    load(file) 
+                end
+                @updated = timestamp
             end
-
-            # go over all loaded files
-            # isolate full path to file if we don't have it
-            # next unless mtime > @updated
-            # test-load file, if pass, add to queue
-            # if fail, add to error list and log
-            # if no errors, reload
-
-#            rotation do |file, mtime|
-#                previous_mtime = @mtimes[file] ||= mtime
-#                safe_load(file, mtime, stderr) if mtime > previous_mtime
-#            end
-            @updated = timestamp
         end
 
         #
-        # A safe Kernel::load, issuing the hooks depending on the results
+        # Walk through the list of every file we've loaded.
         #
-        def safe_load(file, mtime, stderr = $stderr)
-            load(file)
-            stderr.puts "#{self.class}: reloaded `#{file}'"
-            file
-        rescue LoadError, SyntaxError => ex
-            stderr.puts ex
-        ensure
-            @mtimes[file] = mtime
+        def find_files_for_reload
+            paths = [ './', *$LOAD_PATH ].uniq
+            [ $0, *$LOADED_FEATURES ].uniq.map do |file|
+                next if file =~ /\.(so|bundle)$/
+                yield(find(file, paths))
+            end
+        end
+
+        #
+        # Returns true if the file is loadable; uses the wrapper
+        # functionality of Kernel#load to protect the global namespace.
+        #
+        def verify(file)
+            begin
+                @logger.debug("Verifying #{file}")
+                load(file, true)
+                return(true)
+            rescue => error
+                @logger.error("Failed to verify #{file}: #{error.to_s}")
+                error.backtrace.each { |l| @logger.error("    #{l}") }
+            end
         end
 
         #
         # Takes a relative or absolute +file+ name, a couple possible
-        # +paths+ that the +file+ might reside in. Returns the full path
-        # and File::Stat for the path.
+        # +paths+ that the +file+ might reside in. Returns a tuple of
+        # the full path where the file was found and its modification
+        # time, or nil if not found.
         #
         def find(file, paths)
-            found = @files[file]
-
-            found ||= file if Pathname.new(file).absolute?
-
-            found, stat = safe_stat(found)
-            return found, stat if found
-
-            paths.find do |possible_path|
-                path = ::File.join(possible_path, file)
-                found, stat = safe_stat(path)
-                return ::File.expand_path(found), stat if found
+            if(Pathname.new(file).absolute?)
+                return unless (timestamp = mtime(file))
+                @logger.debug("Found #{file}")
+                [ file, timestamp ]
+            else
+                paths.each do |path|
+                    fullpath = File.expand_path((File.join(path, file)))
+                    next unless (timestamp = mtime(fullpath))
+                    @logger.debug("Found #{file} in #{fullpath}")
+                    return([ fullpath, timestamp ])
+                end
+                return(nil)
             end
-
-            return false, false
         end
 
         #
@@ -104,10 +137,13 @@ module Mizuno
             begin
                 return unless file
                 stat = File.stat(file)
-                stat.file? ? stat.mtime : nil
+                stat.file? ? stat.mtime.to_i : nil
             rescue Errno::ENOENT, Errno::ENOTDIR
                 nil
             end
         end
     end
 end
+
+# Reload on SIGHUP.
+trap("SIGHUP") { Mizuno::Reloader.reload! }

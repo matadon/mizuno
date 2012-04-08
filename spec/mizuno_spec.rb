@@ -29,11 +29,11 @@ describe 'daemonization' do
     # Wait until _timeout_ seconds for a successful http connection
     # and return the result; returns nil on failure.
     #
-    def connect_to_server(timeout = MAX_TIMEOUT)
+    def connect_to_server(path = '/', timeout = MAX_TIMEOUT)
         begin
             Net::HTTP.start('127.0.0.1', 9201) do |http|
                 http.read_timeout = timeout
-                return(http.get("/"))
+                return(http.get(path))
             end
         rescue Errno::ECONNREFUSED => error
             return unless ((timeout -= 1) > 0)
@@ -43,7 +43,7 @@ describe 'daemonization' do
     end
 
     before :each do
-        response = connect_to_server(MIN_TIMEOUT)
+        response = connect_to_server('/', MIN_TIMEOUT)
         response.should be_nil
         FileUtils.rm(PIDFILE) if File.exists?(PIDFILE)
     end
@@ -55,7 +55,7 @@ describe 'daemonization' do
         response.code.should == "200"
         process.stop
         process.wait
-        response = connect_to_server(MIN_TIMEOUT)
+        response = connect_to_server('/', MIN_TIMEOUT)
         response.should be_nil
     end
 
@@ -78,10 +78,10 @@ describe 'daemonization' do
             process.stop
             pidfile = PIDFILE
             raise("Failed to stop daemon.") unless File.exists?(pidfile)
-            Process.kill("TERM", pid)
+            Process.kill("TERM", File.read(PIDFILE).to_i)
             raise("Failed to stop daemon; forced termination.")
         end
-        response = connect_to_server(MIN_TIMEOUT)
+        response = connect_to_server('/', MIN_TIMEOUT)
         response.should be_nil
     end
 
@@ -124,15 +124,53 @@ describe 'daemonization' do
             unless (Process.uid == 0)
     end
 
+    it "reloads on SIGHUP" do
+        process = run("spec/support/test_app.ru")
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        first_version = response.body.to_i
+
+        Process.kill("HUP", process.pid)
+
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        second_version = response.body.to_i
+
+        FileUtils.touch('spec/support/test_app.rb')
+        sleep(1)
+        Process.kill("HUP", process.pid)
+        sleep(1)
+
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        third_version = response.body.to_i
+
+        process.stop
+        process.wait
+
+        second_version.should == first_version
+        third_version.should > first_version
+    end
+
+    pending "reloads when a trigger file is touched" do
+    end
+
+    pending "reloads an app when a trigger file is modified" do
+    end
+
+    pending "handles ssl requests" do
+    end
+
+    pending "handles spdy requests" do
+    end
+
     pending "writes server logs to a file" do
     end
 
     pending "allows for rotation of server logs" do
     end
-
-    pending "reloads on SIGHUP" do
-    end
-
-    pending "reloads an app when a trigger file is modified" do
-    end
 end
+
