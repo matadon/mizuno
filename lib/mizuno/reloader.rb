@@ -25,6 +25,7 @@ module Mizuno
                 self.class.reloaders ||= []
                 self.class.reloaders << self
                 self.class.logger ||= Mizuno::HttpServer.logger
+                self.class.trigger ||= "tmp/restart.txt"
             end
 
             @app = app

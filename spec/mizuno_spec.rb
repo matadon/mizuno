@@ -131,15 +131,17 @@ describe 'daemonization' do
         response.code.should == "200"
         first_version = response.body.to_i
 
+        sleep(1)
         Process.kill("HUP", process.pid)
+        sleep(1)
 
         response = connect_to_server('/version')
         response.should_not be_nil
         response.code.should == "200"
         second_version = response.body.to_i
 
-        FileUtils.touch('spec/support/test_app.rb')
         sleep(1)
+        FileUtils.touch('spec/support/test_app.rb')
         Process.kill("HUP", process.pid)
         sleep(1)
 
@@ -155,10 +157,37 @@ describe 'daemonization' do
         third_version.should > first_version
     end
 
-    pending "reloads when a trigger file is touched" do
-    end
+    it "reloads when a trigger file is touched" do
+        process = run("spec/support/test_app.ru")
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        first_version = response.body.to_i
 
-    pending "reloads an app when a trigger file is modified" do
+        sleep(1)
+        FileUtils.touch('tmp/restart.txt')
+        sleep(1)
+
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        second_version = response.body.to_i
+
+        sleep(1)
+        FileUtils.touch('spec/support/test_app.rb')
+        FileUtils.touch('tmp/restart.txt')
+        sleep(1)
+
+        response = connect_to_server('/version')
+        response.should_not be_nil
+        response.code.should == "200"
+        third_version = response.body.to_i
+
+        process.stop
+        process.wait
+
+        second_version.should == first_version
+        third_version.should > first_version
     end
 
     pending "handles ssl requests" do
