@@ -1,5 +1,6 @@
 require 'mizuno/version'
 require 'mizuno/java_logger'
+require 'mizuno/reloader'
 
 module Mizuno
     class HttpServer
@@ -72,6 +73,11 @@ module Mizuno
             # Servlet handler.
             app_handler = ServletContextHandler.new(nil, "/", 
                 ServletContextHandler::NO_SESSIONS)
+
+            # Optionally wrap with Mizuno::Reloader.
+            threshold = (ENV['RACK_ENV'] == 'production' ? 10 : 1)
+            app = Mizuno::Reloader.new(app, threshold) \
+                if options[:reloadable]
 
             # The servlet itself.
             rack_servlet = RackServlet.new
@@ -174,9 +180,6 @@ module Mizuno
         end
     end
 end
-
-# Register ourselves with Rack when this file gets loaded.
-Rack::Handler.register 'mizuno', 'Mizuno::HttpServer'
 
 # Ensure that we shutdown the server on exit.
 at_exit { Mizuno::HttpServer.stop }

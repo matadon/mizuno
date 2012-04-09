@@ -39,7 +39,7 @@ module Mizuno
         # Reload @app on request.
         #
         def call(env)
-            reload!
+            Thread.exclusive { reload! }
             @app.call(env)
         end
 
@@ -51,36 +51,33 @@ module Mizuno
         #
         def reload!(force = false)
             return unless (Time.now.to_i > @threshold)
-            return unless (force or (timestamp = mtime(@trigger)))
+            @threshold = Time.now.to_i + @interval
+            return unless (force or \
+                ((timestamp = mtime(@trigger)).to_i > @updated))
+            timestamp ||= Time.now.to_i
 
-            Thread.exclusive do
-                return unless (force or (timestamp > @updated))
-                timestamp ||= Time.now.to_i
-                @threshold += @interval
-
-                # Check updated files to ensure they're loadable.
-                missing, errors = 0, 0
-                files = find_files_for_reload do |file, file_mtime|
-                    next(missing += 1 and nil) unless file_mtime
-                    next unless (file_mtime >= @updated)
-                    next(errors += 1 and nil) unless verify(file)
-                    file
-                end
-
-                # Cowardly fail if we can't load something.
-                @logger.debug("#{missing} files missing during reload.") \
-                    if (missing > 0)
-                return(@logger.error("#{errors} errors, not reloading.")) \
-                    if (errors > 0)
-
-                # Reload everything that's changed.
-                files.each do |file|
-                    next unless file
-                    @logger.info("Reloading #{file}")
-                    load(file) 
-                end
-                @updated = timestamp
+            # Check updated files to ensure they're loadable.
+            missing, errors = 0, 0
+            files = find_files_for_reload do |file, file_mtime|
+                next(missing += 1 and nil) unless file_mtime
+                next unless (file_mtime >= @updated)
+                next(errors += 1 and nil) unless verify(file)
+                file
             end
+
+            # Cowardly fail if we can't load something.
+            @logger.debug("#{missing} files missing during reload.") \
+                if (missing > 0)
+            return(@logger.error("#{errors} errors, not reloading.")) \
+                if (errors > 0)
+
+            # Reload everything that's changed.
+            files.each do |file|
+                next unless file
+                @logger.info("Reloading #{file}")
+                load(file) 
+            end
+            @updated = timestamp
         end
 
         #

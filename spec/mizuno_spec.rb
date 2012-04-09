@@ -125,7 +125,7 @@ describe 'daemonization' do
     end
 
     it "reloads on SIGHUP" do
-        process = run("spec/support/test_app.ru")
+        process = run("spec/support/test_app.ru --reloadable")
         response = connect_to_server('/version')
         response.should_not be_nil
         response.code.should == "200"
@@ -158,7 +158,7 @@ describe 'daemonization' do
     end
 
     it "reloads when a trigger file is touched" do
-        process = run("spec/support/test_app.ru")
+        process = run("spec/support/test_app.ru --reloadable")
         response = connect_to_server('/version')
         response.should_not be_nil
         response.code.should == "200"

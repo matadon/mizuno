@@ -76,7 +76,7 @@ Choice.options do
     end
 
     separator ''
-    separator 'Daemonization: '
+    separator 'Mizuno-specific options: '
 
     option :daemonize do
         short '-D'
@@ -105,7 +105,13 @@ Choice.options do
 
     option :reload do
         long '--reload'
-        desc 'reload a running daemon'
+        desc 'reloads a running mizuno instance'
+        default false
+    end
+
+    option :reloadable do
+        long '--reloadable'
+        desc 'sets up live reloading via mizuno/reloader'
         default false
     end
 
