@@ -142,6 +142,7 @@ describe 'daemonization' do
 
         sleep(1)
         FileUtils.touch('spec/support/test_app.rb')
+        sleep(1)
         Process.kill("HUP", process.pid)
         sleep(1)
 

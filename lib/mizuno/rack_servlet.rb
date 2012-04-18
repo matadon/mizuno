@@ -18,6 +18,9 @@ module Mizuno
         include_class org.eclipse.jetty.continuation.ContinuationSupport
         include_class org.jruby.rack.servlet.RewindableInputStream
 
+        # Regex for splitting on newlines.
+        NEWLINE = /\n/
+
         #
         # Sets the Rack application that handles requests sent to this
         # servlet container.
@@ -186,13 +189,16 @@ module Mizuno
                 # Set the HTTP status code.
                 response.setStatus(status.to_i)
 
-                # Did we get a Content-Length header?
-                content_length = headers.delete('Content-Length')
-                response.setContentLength(content_length.to_i) \
-                    if content_length
+                # Servlets require that we set Content-Length and
+                # Content-Type differently than other headers.
+                content_length = headers.delete('Content-Length') \
+                    and response.setContentLength(content_length.to_i)
+                content_type = headers.delete('Content-Type') \
+                    and response.setContentType(content_type)
 
                 # Add all the result headers.
-                headers.each { |h, v| response.addHeader(h, v) }
+                headers.each { |h, v| v.split(NEWLINE).each { |l|
+                    response.addHeader(h, l) } }
             end
 
             # How else would we write output?

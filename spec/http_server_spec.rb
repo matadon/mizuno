@@ -155,4 +155,9 @@ describe Mizuno::HttpServer do
         response.should be_chunked
         response.body.should == 'chunked'
     end
+
+    it "sets multiple cookies correctly" do
+        response = get("/cookied")
+        response['set-cookie'].should == "first=one+fish, second=two+fish"
+    end
 end
