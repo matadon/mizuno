@@ -17,20 +17,12 @@ Gem::Specification.new do |spec|
         LICENSE
         Rakefile
         Gemfile
-        mizuno.gemspec
-        lib/mizuno/choices.rb
-        lib/mizuno/http_server.rb
-        lib/mizuno/java_logger.rb
-        lib/mizuno/rack/chunked.rb
-        lib/mizuno/rack_servlet.rb
-        lib/mizuno/reloader.rb
-        lib/mizuno/runner.rb
-        lib/mizuno/version.rb
-        lib/mizuno.rb
-        lib/rack/handler/mizuno.rb
-        bin/mizuno)
-    jars = Dir.entries("lib/java").grep(/\.jar$/)
-    spec.files.concat(jars.map { |j| "lib/java/#{j}" })
+        mizuno.gemspec)
+    spec.files.concat(Dir['lib/**/*.rb'])
+    spec.files.concat(Dir['bin/*'])
+    spec.files.concat(Dir['lib/**/*.jar'])
+#    jars = Dir.entries("lib/java").grep(/\.jar$/)
+#    spec.files.concat(jars.map { |j| "lib/java/#{j}" })
     spec.homepage = 'http://github.com/matadon/mizuno'
     spec.has_rdoc = false
     spec.require_paths = [ "lib" ]
