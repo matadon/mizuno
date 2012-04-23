@@ -2,7 +2,6 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 # All dependencies for testing.
-require 'mizuno'
 require 'yaml'
 require 'net/http'
 require 'thread'
@@ -12,6 +11,7 @@ require 'json/pure'
 require 'rack/urlmap'
 require 'rack/lint'
 require 'support/test_app'
+require 'mizuno'
 
 Thread.abort_on_exception = true
 

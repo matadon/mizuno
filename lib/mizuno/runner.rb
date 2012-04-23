@@ -1,11 +1,13 @@
 require 'ffi'
 require 'net/http'
 require 'choice'
-require 'mizuno/choices'
 require 'childprocess'
 require 'fileutils'
 require 'etc'
 require 'rack'
+require 'mizuno'
+require 'mizuno/choices'
+require 'mizuno/server'
 
 module Mizuno
     require 'rbconfig'
@@ -99,7 +101,7 @@ module Mizuno
 
             # Fire up Mizuno as if it was called from Rackup.
             Dir.chdir(options[:root])
-            HttpServer.configure_logging(options)
+            JavaLogger.configure(options)
             ENV['RACK_ENV'] = options[:env]
             server = Rack::Server.new
             server.options = options.merge(:server => 'mizuno',
@@ -260,7 +262,7 @@ module Mizuno
         #
         # Exit with a message and a status value.
         #
-        # FIXME: Dump these in the logfile if called from HttpServer?
+        # FIXME: Dump these in the logfile if called from Server?
         #
         def Runner.die(message, success = false)
             $stderr.puts(message)
@@ -268,3 +270,6 @@ module Mizuno
         end
     end
 end
+
+# Ensure that we shutdown the server on exit.
+at_exit { Mizuno::Server.stop }

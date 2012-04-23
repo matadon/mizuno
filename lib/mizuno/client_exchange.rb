@@ -2,7 +2,7 @@ require 'stringio'
 require 'mizuno/client_response'
 
 module Mizuno
-    include_class 'org.eclipse.jetty.client.ContentExchange'
+    java_import 'org.eclipse.jetty.client.ContentExchange'
 
     # what do I want to happen on a timeout or error?
 

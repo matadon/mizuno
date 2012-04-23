@@ -1,10 +1,12 @@
 require 'thread'
+require 'mizuno'
+Mizuno.require_jars(%w(jetty-client jetty-http jetty-io jetty-util))
 require 'mizuno/client_exchange'
 
 module Mizuno
     class Client
-        include_class 'org.eclipse.jetty.client.HttpClient'
-        include_class 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+        java_import 'org.eclipse.jetty.client.HttpClient'
+        java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
 
         @lock = Mutex.new
 
@@ -24,7 +26,7 @@ module Mizuno
         def initialize(options = {})
             defaults = { :timeout => 60 }
             options = defaults.merge(options)
-            @client = HttpClient.new
+            @client = HttpClient.new(options[:ssl_context])
             @client.setConnectorType(HttpClient::CONNECTOR_SELECT_CHANNEL)
             @client.setMaxConnectionsPerAddress(100)
             @client.setThreadPool(QueuedThreadPool.new(50))

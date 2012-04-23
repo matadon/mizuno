@@ -1,6 +1,7 @@
 require 'spec_helper'
+require 'mizuno/server'
 
-describe Mizuno::HttpServer do
+describe Mizuno::Server do
     include HttpRequests
 
     before(:all) do
@@ -14,11 +15,11 @@ describe Mizuno::HttpServer do
         @options = { :host => '127.0.0.1', :port => 9201, 
             :embedded => true, :threads => 10 }
         Net::HTTP.version_1_2
-        Mizuno::HttpServer.run(@rackup, @options)
+        Mizuno::Server.run(@rackup, @options)
     end
 
     after(:all) do
-        Mizuno::HttpServer.stop
+        Mizuno::Server.stop
     end
 
     it "returns 200 OK" do

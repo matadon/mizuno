@@ -11,15 +11,20 @@ require 'rack/response'
 #         /servlet/http/HttpServlet.html
 #
 module Mizuno
-    include_class javax.servlet.http.HttpServlet
+    java_import 'javax.servlet.http.HttpServlet'
 
     class RackServlet < HttpServlet
-        include_class java.io.FileInputStream
-        include_class org.eclipse.jetty.continuation.ContinuationSupport
-        include_class org.jruby.rack.servlet.RewindableInputStream
+        java_import 'java.io.FileInputStream'
+        java_import 'org.eclipse.jetty.continuation.ContinuationSupport'
+        java_import 'org.jruby.rack.servlet.RewindableInputStream'
 
         # Regex for splitting on newlines.
         NEWLINE = /\n/
+
+        def initialize(server)
+            @server = server
+            super()
+        end
 
         #
         # Sets the Rack application that handles requests sent to this
@@ -151,8 +156,8 @@ module Mizuno
                 if env["HTTP_CONTENT_LENGTH"]
 
             # Route errors through the logger.
-            env['rack.errors'] ||= HttpServer.logger
-            env['rack.logger'] ||= HttpServer.logger
+            env['rack.errors'] ||= @server.logger
+            env['rack.logger'] ||= @server.logger
 
             # All done, hand back the Rack request.
             return(env)
@@ -244,7 +249,7 @@ module Mizuno
                 message = "Exception: #{error}"
                 message << "\n#{error.backtrace.join("\n")}" \
                     if (error.respond_to?(:backtrace))
-                HttpServer.logger.error(message)
+                Server.logger.error(message)
                 return if response.isCommitted
                 response.reset
                 response.setStatus(500)

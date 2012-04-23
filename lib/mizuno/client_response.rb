@@ -1,3 +1,5 @@
+require 'rack/response'
+
 module Mizuno
     class ClientResponse
         include Rack::Response::Helpers

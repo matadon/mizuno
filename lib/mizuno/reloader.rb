@@ -12,6 +12,10 @@ module Mizuno
     # by sending a SIGHUP to the process.
     # 
     class Reloader
+        @reloaders = []
+
+        @trigger = 'tmp/restart.txt'
+
         class << self
             attr_accessor :logger, :trigger, :reloaders
         end
@@ -20,14 +24,15 @@ module Mizuno
             reloaders.each { |r| r.reload!(true) }
         end
 
-        def initialize(app, interval = 1)
+        def Reloader.add(reloader)
             Thread.exclusive do
-                self.class.reloaders ||= []
-                self.class.reloaders << self
-                self.class.logger ||= Mizuno::HttpServer.logger
-                self.class.trigger ||= "tmp/restart.txt"
+                @logger ||= Mizuno::Server.logger
+                @reloaders << reloader
             end
+        end
 
+        def initialize(app, interval = 1)
+            Reloader.add(self)
             @app = app
             @interval = interval
             @trigger = self.class.trigger
