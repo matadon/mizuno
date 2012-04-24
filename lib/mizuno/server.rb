@@ -9,7 +9,7 @@ Mizuno.require_jars(%w(jetty-continuation jetty-http jetty-io jetty-jmx
 require 'mizuno/version'
 require 'mizuno/rack/chunked'
 require 'mizuno/rack_servlet'
-require 'mizuno/java_logger'
+require 'mizuno/logger'
 require 'mizuno/reloader'
 
 module Mizuno
@@ -40,7 +40,7 @@ module Mizuno
         end
 
         def Server.logger
-            JavaLogger.logger
+            Logger.logger
         end
 
         #
@@ -63,8 +63,8 @@ module Mizuno
             options[:quiet] ||= true if options[:embedded]
 
             # The Jetty server
-            JavaLogger.configure(options)
-            @logger = JavaLogger.logger
+            Logger.configure(options)
+            @logger = Logger.logger
             @server = Java.org.eclipse.jetty.server.Server.new
             @server.setSendServerVersion(false)
 

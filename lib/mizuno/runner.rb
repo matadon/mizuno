@@ -101,7 +101,7 @@ module Mizuno
 
             # Fire up Mizuno as if it was called from Rackup.
             Dir.chdir(options[:root])
-            JavaLogger.configure(options)
+            Logger.configure(options)
             ENV['RACK_ENV'] = options[:env]
             server = Rack::Server.new
             server.options = options.merge(:server => 'mizuno',

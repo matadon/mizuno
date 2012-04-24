@@ -8,6 +8,9 @@ module Mizuno
         java_import 'org.eclipse.jetty.client.HttpClient'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
 
+        java_import 'java.security.KeyStore'
+        java_import 'org.eclipse.jetty.util.ssl.SslContextFactory'
+
         @lock = Mutex.new
 
         def Client.request(*args, &block)
@@ -26,7 +29,14 @@ module Mizuno
         def initialize(options = {})
             defaults = { :timeout => 60 }
             options = defaults.merge(options)
-            @client = HttpClient.new(options[:ssl_context])
+
+#            keystore = KeyStore.getInstance("JKS")
+            #ssl_context_factory.setKeyStore(keystore)
+#            ssl_context_factory = \
+#                SslContextFactory.new('/opt/java/jre/lib/security/cacerts')
+            ssl_context_factory = SslContextFactory.new
+            ssl_context_factory.setNeedClientAuth(false)
+            @client = HttpClient.new(ssl_context_factory)
             @client.setConnectorType(HttpClient::CONNECTOR_SELECT_CHANNEL)
             @client.setMaxConnectionsPerAddress(100)
             @client.setThreadPool(QueuedThreadPool.new(50))

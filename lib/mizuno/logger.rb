@@ -1,24 +1,24 @@
 require 'logger'
 
 module Mizuno
-    class JavaLogger < Logger
+    class Logger < ::Logger
         java_import 'java.io.ByteArrayInputStream'
         java_import 'java.util.Properties'
         java_import 'org.apache.log4j.PropertyConfigurator'
 
         LEVELS = {
-            Logger::DEBUG => Java.org.apache.log4j.Level::DEBUG,
-            Logger::INFO => Java.org.apache.log4j.Level::INFO,
-            Logger::WARN => Java.org.apache.log4j.Level::WARN,
-            Logger::ERROR => Java.org.apache.log4j.Level::ERROR,
-            Logger::FATAL => Java.org.apache.log4j.Level::FATAL }
+            ::Logger::DEBUG => Java.org.apache.log4j.Level::DEBUG,
+            ::Logger::INFO => Java.org.apache.log4j.Level::INFO,
+            ::Logger::WARN => Java.org.apache.log4j.Level::WARN,
+            ::Logger::ERROR => Java.org.apache.log4j.Level::ERROR,
+            ::Logger::FATAL => Java.org.apache.log4j.Level::FATAL }
 
         #
         # Configure Log4J.
         #
         # FIXME: What if this gets called twice?
         #
-        def JavaLogger.configure(options = {})
+        def Logger.configure(options = {})
             return if @options
             @options = options
 
@@ -27,7 +27,7 @@ module Mizuno
             limit = "DEBUG" if ($DEBUG or options[:debug])
 
             # FIXME: logger.error is being marked INFO
-            limit = 'INFO'
+            limit = 'DEBUG'
 
             # Base logging configuration.
             config = <<-END
@@ -67,7 +67,7 @@ module Mizuno
             @logger = new
         end
 
-        def JavaLogger.logger
+        def Logger.logger
             @logger
         end
 
