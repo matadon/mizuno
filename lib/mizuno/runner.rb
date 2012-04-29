@@ -8,6 +8,7 @@ require 'rack'
 require 'mizuno'
 require 'mizuno/choices'
 require 'mizuno/server'
+require 'rack/handler/mizuno'
 
 module Mizuno
     require 'rbconfig'
