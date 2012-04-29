@@ -72,7 +72,7 @@ module Mizuno
 
                 # Add an callback that can be used to add results to the
                 # response asynchronously.
-                env['async.callback'] = lambda do |rack_response|
+                env['async.callback'] = Proc.new do |rack_response|
                     servlet_response = continuation.getServletResponse
                     rack_to_servlet(rack_response, servlet_response) \
                         and continuation.complete
@@ -122,7 +122,7 @@ module Mizuno
             env['SCRIPT_NAME'] = ""
 
             # Rack says URI, but it hands off a URL.
-            env['REQUEST_URI'] = request.getRequestURL.toString
+            env['REQUEST_URI'] = request.getRequestURL.to_s
 
             # Java chops off the query string, but a Rack application will
             # expect it, so we'll add it back if present

@@ -10,7 +10,6 @@ require 'base64'
 require 'json/pure'
 require 'rack/urlmap'
 require 'rack/lint'
-require 'support/test_app'
 require 'mizuno'
 
 Thread.abort_on_exception = true

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'mizuno/server'
+require 'support/test_app'
 
 describe Mizuno::Server do
     include HttpRequests

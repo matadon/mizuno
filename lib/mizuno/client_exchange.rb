@@ -26,7 +26,7 @@ module Mizuno
         end
 
         def onResponseHeader(name, value)
-            @response[name.toString] = value.toString
+            @response[name.to_s] = value.to_s
         end
 
         def onResponseComplete

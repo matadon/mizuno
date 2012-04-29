@@ -15,8 +15,10 @@ describe 'daemonization' do
     #
     def run(command)
         args = <<-END.strip.split(/\s+/)
-            jruby -Ilib/ bin/mizuno --log tmp/mizuno.log \
-                --host 127.0.0.1 --port 9201 -I spec/support \
+            jruby -Ilib/ -Ispec/support bin/mizuno \
+                --log tmp/mizuno.log \
+                --host 127.0.0.1 \
+                --port 9201 \
                 --pidfile #{PIDFILE} #{command}
         END
         process = ChildProcess.build(*args)

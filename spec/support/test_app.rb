@@ -74,7 +74,7 @@ class TestApp
         @subscribers.reject! do |subscriber|
             begin
                 response = Rack::Response.new
-                response.body = message
+                response.body << message
                 subscriber.call(response.finish)
                 next(false)
             rescue java.io.IOException => error
@@ -109,7 +109,7 @@ class TestApp
 
     def chunked(request)
         response = Rack::Response.new
-        response.body = 'chunked'
+        response.body << 'chunked'
         response.finish
     end
 
@@ -117,7 +117,7 @@ class TestApp
         response = Rack::Response.new
         response.set_cookie('first', 'one fish')
         response.set_cookie('second', 'two fish')
-        response.body = 'have some cookies'
+        response.body << 'have some cookies'
         response.finish
     end
 end
