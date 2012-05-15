@@ -109,6 +109,12 @@ Choice.options do
         default false
     end
 
+    option :restart do
+        long '--restart'
+        desc 'starts a new instance if needed when reloading'
+        default false
+    end
+
     option :reloadable do
         long '--reloadable'
         desc 'sets up live reloading via mizuno/reloader'

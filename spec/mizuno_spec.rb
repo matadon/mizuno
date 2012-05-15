@@ -6,7 +6,7 @@ require 'fileutils'
 describe 'daemonization' do
     MIN_TIMEOUT = 1
 
-    MAX_TIMEOUT = 15
+    MAX_TIMEOUT = 30
 
     PIDFILE = "tmp/mizuno.pid"
 
@@ -191,6 +191,32 @@ describe 'daemonization' do
 
         second_version.should == first_version
         third_version.should > first_version
+    end
+
+    it "starts a new server if asked to reload one that isn't running" do
+        process = run("spec/support/success_app.ru --reload --restart")
+        begin
+            process.poll_for_exit(MAX_TIMEOUT)
+        rescue ChildProcess::TimeoutError
+            raise("Failed to daemonize.")
+            process.stop
+        end
+        response = connect_to_server
+        response.should_not be_nil
+        response.code.should == "200"
+
+        process = run("--stop")
+        begin
+            process.poll_for_exit(MAX_TIMEOUT)
+        rescue ChildProcess::TimeoutError
+            process.stop
+            pidfile = PIDFILE
+            raise("Failed to stop daemon.") unless File.exists?(pidfile)
+            Process.kill("TERM", File.read(PIDFILE).to_i)
+            raise("Failed to stop daemon; forced termination.")
+        end
+        response = connect_to_server('/', MIN_TIMEOUT)
+        response.should be_nil
     end
 
     pending "handles ssl requests" do

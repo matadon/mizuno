@@ -101,6 +101,10 @@ module Mizuno
             Runner.daemonize(options) if options.delete(:daemonize)
 
             # Fire up Mizuno as if it was called from Rackup.
+            Runner.start(options)
+        end
+
+        def Runner.start(options)
             Dir.chdir(options[:root])
             Logger.configure(options)
             ENV['RACK_ENV'] = options[:env]
@@ -154,7 +158,10 @@ module Mizuno
         # Reload a running daemon by SIGHUPing it.
         #
         def Runner.reload(options)
-            pid = Runner.pid(options) or die("Mizuno isn't running.")
+            pid = Runner.pid(options)
+            return(Runner.daemonize(options)) \
+                if(pid.nil? and options.delete(:restart))
+            die("Mizuno is currently not running.") unless pid
             Process.kill("HUP", pid)
             die("Mizuno signaled to reload app.", true)
         end
