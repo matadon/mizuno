@@ -219,17 +219,19 @@ module Mizuno
         # error, false otherwise.
         #
         def Runner.wait_for_server(options, timeout = 120)
-            begin
-                app_root_uri = URI::HTTP.build(:host => options[:host], :port => options[:port], :path => '/') 
-                return Net::HTTP.get_response(app_root_uri).code.to_i < 500
-            rescue Errno::ECONNREFUSED => error
-                return(false) unless ((timeout -= 0.5) > 0)
-                sleep(0.5)
-                retry
-            rescue => error
-                puts "HTTP Error '#{error}'"
-                return(false)
-            end
+          options = options.dup 
+          options[:host] = "localhost" if options[:host] == "0.0.0.0"
+          app_root_uri = URI::HTTP.build(:host => options[:host], :port => options[:port], :path => '/') 
+          begin
+            return Net::HTTP.get_response(app_root_uri).code.to_i < 500
+          rescue Errno::ECONNREFUSED => error
+            return(false) unless ((timeout -= 0.5) > 0)
+            sleep(0.5)
+            retry
+          rescue => error
+            puts "HTTP Error '#{error}'"
+            return(false)
+          end
         end
 
         #
