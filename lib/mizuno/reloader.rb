@@ -141,7 +141,7 @@ module Mizuno
                 return unless file
                 stat = File.stat(file)
                 stat.file? ? stat.mtime.to_i : nil
-            rescue Errno::ENOENT, Errno::ENOTDIR
+            rescue Errno::ENOENT, Errno::ENOTDIR, Errno::ESRCH
                 nil
             end
         end
