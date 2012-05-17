@@ -144,7 +144,7 @@ module Mizuno
 
             # Populate the HTTP headers.
             request.getHeaderNames.each do |header_name|
-                header = header_name.upcase.tr('-', '_')
+                header = header_name.to_s.upcase.tr('-', '_')
                 env["HTTP_#{header}"] = request.getHeader(header_name)
             end
 
