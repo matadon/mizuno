@@ -8,6 +8,22 @@ module Rack
     class Chunked
         include Rack::Utils
 
+        class Body
+            include Rack::Utils
+
+            def initialize(body)
+                @body = body
+            end
+
+            def each(&block)
+                @body.each(&block)
+            end
+
+            def close
+                @body.close if @body.respond_to?(:close)
+            end
+        end
+
         def initialize(app)
             @app = app
         end
