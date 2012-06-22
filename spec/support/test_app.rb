@@ -125,6 +125,13 @@ class TestApp
         response.finish
     end
 
+    def rails_like_chunked(request)
+        response = Rack::Response.new
+        response["Content-Encoding"] = "chunked"
+        response.body = Rack::Chunked::Body.new(["chunked"])
+        response.finish
+    end
+
     def cookied(request)
         response = Rack::Response.new
         response.set_cookie('first', 'one fish')

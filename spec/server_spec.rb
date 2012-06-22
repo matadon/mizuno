@@ -173,6 +173,12 @@ describe Mizuno::Server do
         response.body.should == 'chunked'
     end
 
+    it "doesn't double-chunk rails-like content" do
+        response = get("/rails_like_chunked")
+        response.should be_chunked
+        response.body.should == 'chunked'
+    end
+
     it "sets multiple cookies correctly" do
         response = get("/cookied")
         response['set-cookie'].should == "first=one+fish, second=two+fish"
