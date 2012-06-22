@@ -113,6 +113,18 @@ class TestApp
         response.finish
     end
 
+    def stream(request)
+        streaming_body = Object.new
+        def streaming_body.each
+          yield 'one'
+          sleep 0.1
+          yield 'two'
+        end
+        response = Rack::Response.new
+        response.body = streaming_body
+        response.finish
+    end
+
     def cookied(request)
         response = Rack::Response.new
         response.set_cookie('first', 'one fish')

@@ -152,6 +152,21 @@ describe Mizuno::Server do
         clients.each { |c| c.join }
     end
 
+    it "streams responses" do
+        timings = []
+        chunks = []
+
+        Net::HTTP.start(@options[:host], @options[:port]) do |http|
+            http.get("/stream") do |chunk|
+                timings << Time.now
+                chunks << chunk
+            end
+        end
+
+        chunks.should == ["one", "two"]
+        (timings.last - timings.first).should be_within(0.01).of(0.1)
+    end
+
     it "doesn't double-chunk content" do
         response = get("/chunked")
         response.should be_chunked
