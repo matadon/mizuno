@@ -139,7 +139,8 @@ module Mizuno
                 request.getInputStream).to_io.binmode
 
             # Force encoding if we're on Ruby 1.9
-            env['rack.input'].set_encoding(Encoding.find("ASCII-8BIT")) \
+				# Bug in JRuby1.7-p2 doesn't let us use an encoding object
+            env['rack.input'].set_encoding("ASCII-8BIT") \
                 if env['rack.input'].respond_to?(:set_encoding)
 
             # Populate the HTTP headers.
