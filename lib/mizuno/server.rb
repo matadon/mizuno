@@ -4,18 +4,16 @@
 require 'rack'
 require 'mizuno'
 Mizuno.require_jars(%w(jetty-continuation jetty-http jetty-io jetty-jmx
-    jetty-security jetty-server jetty-servlet jetty-servlets jetty-util
+    jetty-security jetty-server jetty-util
     servlet-api rewindable-input-stream))
 require 'mizuno/version'
 require 'mizuno/rack/chunked'
-require 'mizuno/rack_servlet'
+require 'mizuno/rack_handler'
 require 'mizuno/logger'
 require 'mizuno/reloader'
 
 module Mizuno
     class Server
-        java_import 'org.eclipse.jetty.servlet.ServletContextHandler'
-        java_import 'org.eclipse.jetty.servlet.ServletHolder'
         java_import 'org.eclipse.jetty.server.nio.SelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
 
@@ -85,23 +83,15 @@ module Mizuno
             Runner.setgid(options) if options[:group]
             Runner.setuid(options) if options[:user]
 
-            # Servlet handler.
-            app_handler = ServletContextHandler.new(nil, "/", 
-                ServletContextHandler::NO_SESSIONS)
-
             # Optionally wrap with Mizuno::Reloader.
             threshold = (ENV['RACK_ENV'] == 'production' ? 10 : 1)
             app = Mizuno::Reloader.new(app, threshold) \
                 if options[:reloadable]
 
-            # The servlet itself.
-            rack_servlet = RackServlet.new(self)
-            rack_servlet.rackup(app)
-            holder = ServletHolder.new(rack_servlet)
-            app_handler.addServlet(holder, "/")
+            rack_handler = RackHandler.new(self)
+            rack_handler.rackup(app)
 
-            # Add the context to the server and start.
-            @server.set_handler(app_handler)
+            @server.set_handler(rack_handler)
             @server.start
             $stderr.printf("%s listening on %s:%s\n", version,
                 connector.host, connector.port) unless options[:quiet]

@@ -2,18 +2,16 @@ require 'stringio'
 require 'rack/response'
 
 #
-# Wraps a Rack application in a Java servlet.
+# Wraps a Rack application in a Jetty handler.
 #
 # Relevant documentation:
 #
 #     http://rack.rubyforge.org/doc/SPEC.html
-#     http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax
-#         /servlet/http/HttpServlet.html
-#
+#     http://download.eclipse.org/jetty/stable-8/apidocs/org/eclipse/jetty/server/handler/AbstractHandler.html
 module Mizuno
-    java_import 'javax.servlet.http.HttpServlet'
+    java_import 'org.eclipse.jetty.server.handler.AbstractHandler'
 
-    class RackServlet < HttpServlet
+    class RackHandler < AbstractHandler
         java_import 'java.io.FileInputStream'
         java_import 'org.eclipse.jetty.continuation.ContinuationSupport'
         java_import 'org.jruby.rack.servlet.RewindableInputStream'
@@ -28,14 +26,14 @@ module Mizuno
 
         #
         # Sets the Rack application that handles requests sent to this
-        # servlet container.
+        # Jetty handler.
         #
         def rackup(app)
             @app = app
         end
 
         #
-        # Takes an incoming request (as a Java Servlet) and dispatches it to
+        # Takes an incoming request (HttpServletRequest) and dispatches it to
         # the rack application setup via [rackup].  All this really involves
         # is translating the various bits of the Servlet API into the Rack
         # API on the way in, and translating the response back on the way
@@ -49,7 +47,12 @@ module Mizuno
         # When 'async.callback' gets a response with empty headers and an
         # empty body, we declare the async response finished.
         #
-        def service(request, response)
+        java_signature %{@Override void handle(String target,
+                                               Request baseRequest,
+                                               HttpServletRequest request,
+                                               HttpServletResponse response)
+                                        throws IOException, ServletException}
+        def handle(target, base_request, request, response)
             handle_exceptions(response) do
                 # Turn the ServletRequest into a Rack env hash
                 env = servlet_to_rack(request)
