@@ -229,7 +229,10 @@ module Mizuno
                 end
                 input_stream.close
             else
-                body.each { |l| output.write(l.to_java_bytes) }
+                body.each do |chunk|
+                    output.write(chunk.to_java_bytes)
+                    output.flush
+                end
             end
 
             # Close the body if we're supposed to.
