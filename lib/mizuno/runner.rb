@@ -227,11 +227,8 @@ module Mizuno
         #
         def Runner.wait_for_server(options, timeout = 120)
             begin
-                Net::HTTP.start(options[:host], options[:port]) do |http|
-                    http.read_timeout = timeout
-                    response = http.get("/")
-                    return(response.code.to_i < 500)
-                end
+                app_root_uri = URI::HTTP.build(:host => options[:host], :port => options[:port], :path => '/') 
+                return Net::HTTP.get_response(app_root_uri).code.to_i < 500
             rescue Errno::ECONNREFUSED => error
                 return(false) unless ((timeout -= 0.5) > 0)
                 sleep(0.5)
