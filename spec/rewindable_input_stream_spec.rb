@@ -3,7 +3,7 @@ require 'java'
 require 'lib/java/servlet-api-3.0.jar'
 require 'lib/java/rewindable-input-stream.jar'
 
-include_class org.jruby.rack.servlet.RewindableInputStream
+java_import org.jruby.rack.servlet.RewindableInputStream
 
 describe RewindableInputStream do
     it "should read data byte by byte" do

@@ -1,6 +1,8 @@
 *.sw?
 *.DS_Store
 *.gem
+.rbenv-version
+.rvm
 Gemfile.lock
 archive/
 doc/
