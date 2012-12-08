@@ -75,6 +75,12 @@ Choice.options do
         default nil
     end
 
+    option :without_logging do
+        long '--without_logging'
+        desc 'does not configure Log4J'
+        default nil
+    end
+
     separator ''
     separator 'Mizuno-specific options: '
 

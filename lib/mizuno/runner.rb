@@ -226,20 +226,16 @@ module Mizuno
         # error, false otherwise.
         #
         def Runner.wait_for_server(options, timeout = 120)
-            begin
-                Net::HTTP.start(options[:host], options[:port]) do |http|
-                    http.read_timeout = timeout
-                    response = http.get("/")
-                    return(response.code.to_i < 500)
-                end
-            rescue Errno::ECONNREFUSED => error
-                return(false) unless ((timeout -= 0.5) > 0)
-                sleep(0.5)
-                retry
-            rescue => error
-                puts "HTTP Error '#{error}'"
-                return(false)
-            end
+          begin
+            return Net::HTTP.get_response(app_root_uri(options)).code.to_i < 500
+          rescue Errno::ECONNREFUSED => error
+            return(false) unless ((timeout -= 0.5) > 0)
+            sleep(0.5)
+            retry
+          rescue => error
+            puts "HTTP Error '#{error}'"
+            return(false)
+          end
         end
 
         #
@@ -250,11 +246,7 @@ module Mizuno
         def Runner.wait_for_server_to_die(options, timeout = 120)
             begin
                 while(timeout > 0)
-                    Net::HTTP.start(options[:host], options[:port]) do |http|
-                        http.read_timeout = timeout
-                        response = http.get("/")
-                        puts "**** (die) response: #{response}"
-                    end
+                    Net::HTTP.get_response(app_root_uri(options))
                     timeout -= 0.5
                     sleep(0.5)
                 end
@@ -275,6 +267,13 @@ module Mizuno
         def Runner.die(message, success = false)
             $stderr.puts(message)
             exit(success ? 0 : 1)
+        end
+        
+        private
+        def Runner.app_root_uri(options)
+          options = options.dup 
+          options[:host] = "localhost" if options[:host] == "0.0.0.0"
+          URI::HTTP.build(:host => options[:host], :port => options[:port], :path => '/') 
         end
     end
 end
