@@ -226,15 +226,16 @@ module Mizuno
         # error, false otherwise.
         #
         def Runner.wait_for_server(options, timeout = 120)
+            force_time_out_at = Time.now + timeout
+            sleep_interval_for_next_retry = 0.1
+
             begin
-                Net::HTTP.start(options[:host], options[:port]) do |http|
-                    http.read_timeout = timeout
-                    response = http.get("/")
-                    return(response.code.to_i < 500)
-                end
+                response = connect_to_server_as_client(options, timeout)
+                return(response.code.to_i < 500)
             rescue Errno::ECONNREFUSED => error
-                return(false) unless ((timeout -= 0.5) > 0)
-                sleep(0.5)
+                return(false) if (Time.now > force_time_out_at)
+                sleep(sleep_interval_for_next_retry)
+                sleep_interval_for_next_retry *= 2
                 retry
             rescue => error
                 puts "HTTP Error '#{error}'"
@@ -248,15 +249,14 @@ module Mizuno
         # responding, returns false.
         #
         def Runner.wait_for_server_to_die(options, timeout = 120)
+            force_time_out_at = Time.now + timeout
+            sleep_interval_for_next_retry = 0.1
+
             begin
-                while(timeout > 0)
-                    Net::HTTP.start(options[:host], options[:port]) do |http|
-                        http.read_timeout = timeout
-                        response = http.get("/")
-                        puts "**** (die) response: #{response}"
-                    end
-                    timeout -= 0.5
-                    sleep(0.5)
+                while (Time.now < force_time_out_at)
+                    connect_to_server_as_client(options, timeout)
+                    sleep(sleep_interval_for_next_retry)
+                    sleep_interval_for_next_retry *= 2
                 end
                 return(false)
             rescue Errno::ECONNREFUSED => error
@@ -264,6 +264,15 @@ module Mizuno
             rescue => error
                 puts "**** http error: #{error}"
                 return(true)
+            end
+        end
+
+        def Runner.connect_to_server_as_client(server_options, timeout)
+            options = server_options.dup
+            options[:host] = '127.0.0.1' if options[:host] == "0.0.0.0"
+            Net::HTTP.start(options[:host], options[:port]) do |http|
+                http.read_timeout = timeout
+                http.get("/")
             end
         end
 
