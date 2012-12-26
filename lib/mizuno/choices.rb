@@ -75,6 +75,12 @@ Choice.options do
         default nil
     end
 
+    option :rewindable do
+        long '--rewindable'
+        desc 'rewindable input behavior per 1.x spec'
+        default false
+    end
+
     separator ''
     separator 'Mizuno-specific options: '
 
