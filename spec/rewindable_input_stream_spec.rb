@@ -87,6 +87,13 @@ describe RewindableInputStream do
         stream.read.should == -1
     end
 
+    it "should read data than rewind and read again (server)" do
+        body = "Mizuno is a set of Jetty-powered running shoes for JRuby/Rack."
+        response = post("/repeat_body", nil, {}, body)
+        response.code.should == "200"
+        response.body.should == body * 2
+    end
+
     def rewindable_input_stream(input, buffer_size = nil, max_buffer_size = nil)
         input = to_input_stream(input) unless input.is_a?(java.io.InputStream)
         buffer_size ||= RewindableInputStream::INI_BUFFER_SIZE
