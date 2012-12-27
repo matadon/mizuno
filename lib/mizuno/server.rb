@@ -2,6 +2,7 @@
 # deprecation notice and remove it in later versions.
 
 require 'rack'
+require 'rack/rewindable_input'
 require 'mizuno'
 Mizuno.require_jars(%w(jetty-continuation jetty-http jetty-io jetty-jmx
     jetty-security jetty-server jetty-util servlet-api
@@ -16,6 +17,7 @@ module Mizuno
     class Server
         java_import 'org.eclipse.jetty.server.nio.SelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+        java_import 'org.jruby.rack.servlet.RewindableInputStream'
 
         attr_accessor :logger
 
@@ -125,6 +127,16 @@ module Mizuno
         #
         def version
             "Mizuno #{Mizuno::VERSION} (Jetty #{Java.org.eclipse.jetty.server.Server.getVersion})"
+        end
+
+        #
+        # Wraps the Java InputStream for the level of Rack compliance
+        # desired.
+        #
+        def rewindable(request)
+            @options[:rewindable] ?
+                Rack::RewindableInput.new(request.getInputStream.to_io.binmode) :
+                RewindableInputStream.new(request.getInputStream).to_io.binmode
         end
     end
 end
