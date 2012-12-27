@@ -139,4 +139,13 @@ class TestApp
         response.body << 'have some cookies'
         response.finish
     end
+
+    def repeat_body(request)
+        input = request.env['rack.input']
+        response = Rack::Response.new
+        response.body << input.read
+        input.rewind
+        response.body << input.read
+        response.finish
+    end
 end
