@@ -98,7 +98,7 @@ module Mizuno
             $stderr.printf("%s listening on %s:%s\n", version,
                 connector.host, connector.port) unless options[:quiet]
 
-            # If we're embeded, we're done.
+            # If we're embedded, we're done.
             return if options[:embedded]
 
             # Stop the server when we get The Signal.
