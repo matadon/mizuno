@@ -30,5 +30,22 @@ module HttpRequests
             http.request(request)
         end
     end
+
+    def start_server(app, options)
+        @lock = Mutex.new
+        @app = app
+        @rackup = Rack::Builder.app do
+            use Rack::Chunked
+            use Rack::Lint
+            run app
+        end
+        @options = options
+        Net::HTTP.version_1_2
+        Mizuno::Server.run(@rackup, @options)
+    end
+
+    def stop_server
+        Mizuno::Server.stop
+    end
 end
 

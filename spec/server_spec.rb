@@ -6,21 +6,12 @@ describe Mizuno::Server do
     include HttpRequests
 
     before(:all) do
-        @lock = Mutex.new
-        @app = (app = TestApp.new)
-        @rackup = Rack::Builder.app do
-            use Rack::Chunked
-            use Rack::Lint
-            run app
-        end
-        @options = { :host => '127.0.0.1', :port => 9201, 
-            :embedded => true, :threads => 10 }
-        Net::HTTP.version_1_2
-        Mizuno::Server.run(@rackup, @options)
+        start_server(TestApp.new, { :host => '127.0.0.1', :port => 9201,
+            :embedded => true, :threads => 10 })
     end
 
     after(:all) do
-        Mizuno::Server.stop
+        stop_server
     end
 
     it "returns 200 OK" do
