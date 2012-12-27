@@ -17,7 +17,7 @@ require 'json/pure'
 #
 # /push:: Publishes a message to async listeners.
 #
-# /pull:: Recieves messages sent via /push using async.
+# /pull:: Receives messages sent via /push using async.
 #
 # /version:: Returns the timestamp of when the app was loaded
 #
