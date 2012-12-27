@@ -2,10 +2,22 @@ require 'spec_helper'
 require 'java'
 require 'lib/java/servlet-api-3.0.jar'
 require 'lib/java/rewindable-input-stream.jar'
+require 'support/test_app'
 
 java_import org.jruby.rack.servlet.RewindableInputStream
 
 describe RewindableInputStream do
+    include HttpRequests
+
+    before(:all) do
+        start_server(TestApp.new, { :host => '127.0.0.1', :port => 9201,
+            :embedded => true, :rewindable => true })
+    end
+
+    after(:all) do
+        stop_server
+    end
+
     it "should read data byte by byte" do
         input = 49.times.to_a
         stream = rewindable_input_stream(input.to_java(:byte), 6, 24)
