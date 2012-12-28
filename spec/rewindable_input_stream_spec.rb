@@ -25,13 +25,13 @@ describe RewindableInputStream do
         3.times { stream.read.should == -1 }
     end
 
-    it "should read data than rewind and read again (in memory)" do
+    it "should read data then rewind and read again (in memory)" do
         @stream = it_should_read_127_bytes(32, 256)
         @stream.rewind
         it_should_read_127_bytes
     end
 
-    it "should read data than rewind and read again (temp file)" do
+    it "should read data then rewind and read again (temp file)" do
         @stream = it_should_read_127_bytes(16, 64)
         @stream.rewind
         it_should_read_127_bytes
@@ -87,7 +87,7 @@ describe RewindableInputStream do
         stream.read.should == -1
     end
 
-    it "should read data than rewind and read again (server)" do
+    it "should read data then rewind and read again (server)" do
         body = "Mizuno is a set of Jetty-powered running shoes for JRuby/Rack."
         response = post("/repeat_body", nil, {}, body)
         response.code.should == "200"
