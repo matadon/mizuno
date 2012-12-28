@@ -134,9 +134,11 @@ module Mizuno
         # desired.
         #
         def rewindable(request)
+            input = request.getInputStream
+
             @options[:rewindable] ?
-                Rack::RewindableInput.new(request.getInputStream.to_io.binmode) :
-                RewindableInputStream.new(request.getInputStream).to_io.binmode
+                Rack::RewindableInput.new(input.to_io.binmode) :
+                RewindableInputStream.new(input).to_io.binmode
         end
     end
 end
