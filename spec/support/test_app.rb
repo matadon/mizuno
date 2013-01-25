@@ -17,7 +17,7 @@ require 'json/pure'
 #
 # /push:: Publishes a message to async listeners.
 #
-# /pull:: Recieves messages sent via /push using async.
+# /pull:: Receives messages sent via /push using async.
 #
 # /version:: Returns the timestamp of when the app was loaded
 #
@@ -137,6 +137,15 @@ class TestApp
         response.set_cookie('first', 'one fish')
         response.set_cookie('second', 'two fish')
         response.body << 'have some cookies'
+        response.finish
+    end
+
+    def repeat_body(request)
+        input = request.env['rack.input']
+        response = Rack::Response.new
+        response.body << input.read
+        input.rewind
+        response.body << input.read
         response.finish
     end
 end

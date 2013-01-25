@@ -10,7 +10,6 @@ module Mizuno
     class RackHandler < AbstractHandler
         java_import 'java.io.FileInputStream'
         java_import 'org.eclipse.jetty.continuation.ContinuationSupport'
-        java_import 'org.jruby.rack.servlet.RewindableInputStream'
 
         # Regex for splitting on newlines.
         NEWLINE = /\n/
@@ -133,8 +132,7 @@ module Mizuno
             env['rack.run_once'] = false
 
             # The input stream is a wrapper around the Java InputStream.
-            env['rack.input'] = RewindableInputStream.new( \
-                request.getInputStream).to_io.binmode
+            env['rack.input'] = @server.rewindable(request)
 
             # Force encoding if we're on Ruby 1.9
             env['rack.input'].set_encoding(Encoding.find("ASCII-8BIT")) \
