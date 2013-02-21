@@ -74,6 +74,13 @@ Choice.options do
         desc 'logfile (defaults to stderr)'
         default nil
     end
+        
+    option :log4j do
+      # e.g. jruby -J-Dlog4j.debug=true -J-Dlog4j.configuration=file:///Users/jilles/git/localstream/backend/src/main/resources/log4j.properties  /Users/jilles/.rbenv/versions/jruby-1.7.2/lib/ruby/gems/shared/gems/mizuno-0.6.6/bin/mizuno --log4j
+      long '--log4j'
+      desc 'Disable default log4j configuration and allow confiuration via -J-Dlog4j.configuration=file://mypath/log4j.properties'
+      default false
+    end
 
     option :rewindable do
         long '--rewindable'
