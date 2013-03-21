@@ -81,6 +81,12 @@ Choice.options do
         default false
     end
 
+    option :output do
+      long '--output'
+      desc 'file to redirect the stdout and stderr (defaults to the console)'
+      default nil
+    end
+
     separator ''
     separator 'Mizuno-specific options: '
 

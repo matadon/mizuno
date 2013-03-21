@@ -98,7 +98,13 @@ module Mizuno
             @server.set_handler(rack_handler)
             @server.start
             $stderr.printf("%s listening on %s:%s\n", version,
-                connector.host, connector.port) unless options[:quiet]
+                           connector.host, connector.port) unless options[:quiet]
+
+            if options[:output]
+              outfile = File.new(options[:output], 'a+')
+              $stderr.reopen(outfile)
+              $stdout.reopen(outfile)
+            end
 
             # If we're embedded, we're done.
             return if options[:embedded]
