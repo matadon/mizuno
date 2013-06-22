@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
         if spec.respond_to?(:required_rubygems_version=)
     spec.authors = [ "Don Werve" ]
     spec.description = 'Jetty-powered running shoes for JRuby/Rack.'
-    spec.summary = 'Rack handler for Jetty 8 on JRuby. Features multithreading, event-driven I/O, and async support.'
+    spec.summary = 'Rack handler for Jetty 9 on JRuby. Features multithreading, event-driven I/O, and async support.'
     spec.email = 'don@madwombat.com'
     spec.executables = [ "mizuno" ]
     # FIXME: Use Dir.glob for this
