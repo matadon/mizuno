@@ -33,7 +33,7 @@ describe Mizuno::Server do
         response = get("/echo")
         response.code.should == "200"
         content = JSON.parse(response.body)
-        content["rack.version"].should == [ 1, 1 ]
+        content["rack.version"].should == [ 1, 2 ]
         content["rack.multithread"].should be_true
         content["rack.multiprocess"].should be_false
         content["rack.run_once"].should be_false
@@ -120,7 +120,7 @@ describe Mizuno::Server do
         lock, buffer = Mutex.new, Array.new
 
         clients = 20.times.map do |index|
-            Thread.new do 
+            Thread.new do
                 Net::HTTP.start(@options[:host], @options[:port]) do |http|
                     http.read_timeout = 1
                     http.get("/pull") do |chunk|

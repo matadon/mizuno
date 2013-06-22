@@ -46,18 +46,18 @@ class TestApp
 
     def version(request)
         version = TestApp::VERSION.to_s
-        [ 200, { "Content-Type" => "text/plain", 
+        [ 200, { "Content-Type" => "text/plain",
             "Content-Length" => version.length.to_s }, [ version  ] ]
     end
 
     def ping(request)
-        [ 200, { "Content-Type" => "text/plain", 
+        [ 200, { "Content-Type" => "text/plain",
             "Content-Length" => "2" }, [ "OK" ] ]
     end
 
     def error(request, code = nil)
         code ||= (request.path[/^\/\w+\/(\d+)/, 1] or "500")
-        [ code.to_i, { "Content-Type" => "text/plain", 
+        [ code.to_i, { "Content-Type" => "text/plain",
             "Content-Length" => "5" }, [ "ERROR" ] ]
     end
 

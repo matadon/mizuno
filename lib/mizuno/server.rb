@@ -1,6 +1,3 @@
-# FIXME: mizuno/http_server needs to still work, but we will throw out a
-# deprecation notice and remove it in later versions.
-
 require 'rack'
 require 'rack/rewindable_input'
 require 'mizuno'
@@ -15,6 +12,8 @@ require 'mizuno/reloader'
 
 module Mizuno
     class Server
+        java_import 'org.eclipse.jetty.server.HttpConfiguration'
+        java_import 'org.eclipse.jetty.server.HttpConnectionFactory'
         java_import 'org.eclipse.jetty.server.nio.NetworkTrafficSelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
         java_import 'org.jruby.rack.servlet.RewindableInputStream'
@@ -72,12 +71,16 @@ module Mizuno
             Logger.configure(options)
             @logger = Logger.logger
             @server = Java.org.eclipse.jetty.server.Server.new(thread_pool)
-            #@server.setSendServerVersion(false) #missing
+
+            # HTTP Configuration
+            http_config = HttpConfiguration.new();
+            http_config.setSendServerVersion(false)
 
             # Connector
-            connector = NetworkTrafficSelectChannelConnector.new(@server)
+            connector = NetworkTrafficSelectChannelConnector.new(@server, HttpConnectionFactory.new(http_config))
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
+
             @server.addConnector(connector)
 
             # Switch to a different user or group if we were asked to.
