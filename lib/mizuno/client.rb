@@ -1,6 +1,7 @@
 require 'thread'
 require 'mizuno'
 Mizuno.require_jars(%w(jetty-client jetty-http jetty-io jetty-util))
+require 'mizuno/client_response'
 require 'mizuno/client_response_listener'
 
 module Mizuno
@@ -38,15 +39,15 @@ module Mizuno
 
     def stop(wait = true)
       wait and @lock.synchronize do
-        @listeners.each { |e| e.responseComplete() }
+        @listeners.each { |e| e.get(5, java.util.concurrent.TimeUnit::SECONDS) }
         @listeners.clear
       end
       @client.stop
     end
 
-    def clear(exchange)
+    def clear(listener)
       return unless @lock.try_lock
-      @listeners.delete(exchange)
+      @listeners.delete(listener)
       @lock.unlock
     end
 
@@ -58,11 +59,22 @@ module Mizuno
     #   return status
     # end
 
-    def request(url, options = {}, &block)
-      listener = ClientResponseListener.new(&block)
+    # def request(url, options = {}, &block)
+    #   exchange = ClientExchange.new(self)
+    #   @lock.synchronize { @exchanges << exchange }
+    #   exchange.setup(url, options, &block)
+    #   @client.send(exchange)
+    #   return(exchange)
+    # end
 
+    def request(url, options = {}, &block)
+
+      request = @client.newRequest(url)
+
+      listener = Mizuno::ClientResponseListener.new(request, &block)
       @lock.synchronize { @listeners << listener }
-      @client.newRequest(url).send(listener)
+
+      request.send(listener)
 
       return(listener)
     end

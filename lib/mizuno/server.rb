@@ -67,9 +67,11 @@ module Mizuno
       thread_pool.min_threads = [ threads.to_i / 10, 5 ].max
       thread_pool.max_threads = [ threads.to_i, 10 ].max
 
-      # The Jetty server
+      # Logger
       Logger.configure(options)
       @logger = Logger.logger
+
+      # The Jetty server
       @server = Java.org.eclipse.jetty.server.Server.new(thread_pool)
 
       # HTTP Configuration

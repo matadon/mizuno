@@ -2,11 +2,11 @@ require 'stringio'
 require 'mizuno/client_response'
 
 module Mizuno
-  java_import 'org.eclipse.jetty.client.ContentExchange'
+  java_import 'org.eclipse.jetty.client.HttpExchange'
 
   # what do I want to happen on a timeout or error?
 
-  class ClientExchange < ContentExchange
+  class ClientExchange < HttpExchange
     def initialize(client)
       super(false)
       @client = client
