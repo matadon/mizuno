@@ -51,22 +51,6 @@ module Mizuno
       @lock.unlock
     end
 
-    # def request(url, options={}, &block)
-    #   response = @client.newRequest("http://google.com").send()
-    #   status = response.status()
-
-    #   # @client.newRequest(url).send()
-    #   return status
-    # end
-
-    # def request(url, options = {}, &block)
-    #   exchange = ClientExchange.new(self)
-    #   @lock.synchronize { @exchanges << exchange }
-    #   exchange.setup(url, options, &block)
-    #   @client.send(exchange)
-    #   return(exchange)
-    # end
-
     def request(url, options = {}, &block)
 
       request = @client.newRequest(url)
