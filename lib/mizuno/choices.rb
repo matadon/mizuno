@@ -82,6 +82,15 @@ Choice.options do
     end
 
     separator ''
+    separator 'WebSockets options: '
+
+    option :websockets do
+        long '--websockets'
+        desc 'WebSockets adapter class'
+        default nil
+    end
+
+    separator ''
     separator 'Mizuno-specific options: '
 
     option :daemonize do

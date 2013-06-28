@@ -9,6 +9,8 @@ require 'mizuno/rack/chunked'
 require 'mizuno/rack_handler'
 require 'mizuno/logger'
 require 'mizuno/reloader'
+require 'mizuno/websockets/handler'
+require 'mizuno/websockets/creator'
 
 module Mizuno
     class Server
@@ -17,6 +19,7 @@ module Mizuno
         java_import 'org.eclipse.jetty.server.nio.NetworkTrafficSelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
         java_import 'org.jruby.rack.servlet.RewindableInputStream'
+
 
         attr_accessor :logger
 
@@ -94,13 +97,28 @@ module Mizuno
             app = Mizuno::Reloader.new(app, threshold) \
                 if options[:reloadable]
 
-            # The servlet itself.
+
+            # Rack handler
             rack_handler = RackHandler.new(self)
             rack_handler.rackup(app)
 
+            if options[:websockets]
+                # WebSockets wrapper
+                creator                 = Websockets::Creator.new()
+                creator.adapter         = constantize(options[:websockets]).new()
+                handler_wrapper         = Websockets::Handler.new()
+                handler_wrapper.creator = creator
+
+                handler_wrapper.setHandler(rack_handler)
+            else
+                handler_wrapper = rack_handler
+            end
+
+            @server.setHandler(handler_wrapper)
+
             # Add the context to the server and start.
-            @server.set_handler(rack_handler)
             @server.start
+
             $stderr.printf("%s listening on %s:%s\n", version,
                 connector.host, connector.port) unless options[:quiet]
 
@@ -114,6 +132,17 @@ module Mizuno
             # descriptors don't get closed by accident.
             # http://www.ruby-forum.com/topic/209252
             @server.join
+        end
+
+        def constantize(camel_cased_word)
+            names = camel_cased_word.split('::')
+            names.shift if names.empty? || names.first.empty?
+
+            constant = Object
+            names.each do |name|
+                constant = constant.const_defined?(name) ? constant.const_get(name) : constant.const_missing(name)
+            end
+            constant
         end
 
         #
