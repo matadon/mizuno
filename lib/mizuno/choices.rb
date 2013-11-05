@@ -175,7 +175,7 @@ Choice.options do
         desc 'Show version'
         action do
             $stderr.puts Mizuno::Server.version
-            exit            
+            exit
         end
     end
 end

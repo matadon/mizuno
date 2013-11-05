@@ -125,7 +125,7 @@ module Mizuno
             # appropriate options; this depends on the proper jruby
             # being in the $PATH
             config = options.delete(:config)
-            args = Mizuno::LAUNCH_ENV.concat(options.map { |k, v| 
+            args = Mizuno::LAUNCH_ENV.concat(options.map { |k, v|
                 (v.to_s.empty?) ? nil : [ "--#{k}", v.to_s ] }.compact.flatten)
             args.push(config)
             args.unshift('jruby')
@@ -203,7 +203,7 @@ module Mizuno
         # Fetches the PID from the :pidfile.
         #
         def Runner.pid(options)
-            options[:pidfile] or die("Speficy a --pidfile to daemonize.") 
+            options[:pidfile] or die("Speficy a --pidfile to daemonize.")
             return unless File.exists?(options[:pidfile])
             pid = File.read(options[:pidfile]).to_i
 

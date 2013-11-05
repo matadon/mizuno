@@ -2,11 +2,11 @@ require 'stringio'
 require 'mizuno/client_response'
 
 module Mizuno
-    java_import 'org.eclipse.jetty.client.ContentExchange'
+    java_import 'org.eclipse.jetty.client.HttpExchange'
 
     # what do I want to happen on a timeout or error?
 
-    class ClientExchange < ContentExchange
+    class ClientExchange < HttpExchange
         def initialize(client)
             super(false)
             @client = client
@@ -18,11 +18,11 @@ module Mizuno
             setURL(url)
             @response.ssl = (getScheme == 'https')
             setMethod((options[:method] or "GET").upcase)
-            headers = options[:headers] and headers.each_pair { |k, v| 
+            headers = options[:headers] and headers.each_pair { |k, v|
                 setRequestHeader(k, v) }
             return unless options[:body]
             body = StringIO.new(options[:body].read)
-            setRequestContentSource(body.to_inputstream) 
+            setRequestContentSource(body.to_inputstream)
         end
 
         def onResponseHeader(name, value)

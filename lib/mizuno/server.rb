@@ -1,6 +1,3 @@
-# FIXME: mizuno/http_server needs to still work, but we will throw out a
-# deprecation notice and remove it in later versions.
-
 require 'rack'
 require 'rack/rewindable_input'
 require 'mizuno'
@@ -15,7 +12,9 @@ require 'mizuno/reloader'
 
 module Mizuno
     class Server
-        java_import 'org.eclipse.jetty.server.nio.SelectChannelConnector'
+        java_import 'org.eclipse.jetty.server.HttpConfiguration'
+        java_import 'org.eclipse.jetty.server.HttpConnectionFactory'
+        java_import 'org.eclipse.jetty.server.nio.NetworkTrafficSelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
         java_import 'org.jruby.rack.servlet.RewindableInputStream'
 
@@ -32,7 +31,7 @@ module Mizuno
         end
 
         def Server.stop
-            @lock.synchronize do 
+            @lock.synchronize do
                 return unless @server
                 @server.stop
                 @server = nil
@@ -49,36 +48,41 @@ module Mizuno
         # case-sensitive:
         #
         # :host::
-        #     String specifying the IP address to bind to; defaults 
+        #     String specifying the IP address to bind to; defaults
         #     to 0.0.0.0.
         #
         # :port::
-        #     String or integer with the port to bind to; defaults 
+        #     String or integer with the port to bind to; defaults
         #     to 9292.
         #
         def run(app, options = {})
             # Symbolize and downcase keys.
-            @options = options = Hash[options.map { |k, v| 
+            @options = options = Hash[options.map { |k, v|
                 [ k.to_s.downcase.to_sym, v ] }]
             options[:quiet] ||= true if options[:embedded]
-
-            # The Jetty server
-            Logger.configure(options)
-            @logger = Logger.logger
-            @server = Java.org.eclipse.jetty.server.Server.new
-            @server.setSendServerVersion(false)
 
             # Thread pool
             threads = options[:threads] || 50
             thread_pool = QueuedThreadPool.new
             thread_pool.min_threads = [ threads.to_i / 10, 5 ].max
             thread_pool.max_threads = [ threads.to_i, 10 ].max
-            @server.set_thread_pool(thread_pool)
+
+            # Logger
+            Logger.configure(options)
+            @logger = Logger.logger
+
+            # The Jetty server
+            @server = Java.org.eclipse.jetty.server.Server.new(thread_pool)
+
+            # HTTP Configuration
+            http_config = HttpConfiguration.new();
+            http_config.setSendServerVersion(false)
 
             # Connector
-            connector = SelectChannelConnector.new
+            connector = NetworkTrafficSelectChannelConnector.new(@server, HttpConnectionFactory.new(http_config))
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
+
             @server.addConnector(connector)
 
             # Switch to a different user or group if we were asked to.

@@ -1,5 +1,5 @@
 #
-# A Rack handler for Jetty 8.
+# A Rack handler for Jetty 9.
 #
 # Written by Don Werve <don@madwombat.com>
 #
