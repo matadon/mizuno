@@ -33,7 +33,7 @@ describe Mizuno::Server do
         response = get("/echo")
         response.code.should == "200"
         content = JSON.parse(response.body)
-        content["rack.version"].should == [ 1, 1 ]
+        content["rack.version"].should == [ 1, 2 ]
         content["rack.multithread"].should be_true
         content["rack.multiprocess"].should be_false
         content["rack.run_once"].should be_false
