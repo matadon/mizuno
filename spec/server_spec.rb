@@ -120,7 +120,7 @@ describe Mizuno::Server do
         lock, buffer = Mutex.new, Array.new
 
         clients = 20.times.map do |index|
-            Thread.new do 
+            Thread.new do
                 Net::HTTP.start(@options[:host], @options[:port]) do |http|
                     http.read_timeout = 1
                     http.get("/pull") do |chunk|
@@ -132,11 +132,11 @@ describe Mizuno::Server do
         end
 
         lock.synchronize { buffer.should be_empty }
-        post("/push", 'message' => "one") and sleep(0.1)
+        post("/push", 'message' => "one") and sleep(0.2)
         lock.synchronize { buffer.count.should == 20 }
-        post("/push", 'message' => "two") and sleep(0.1)
+        post("/push", 'message' => "two") and sleep(0.2)
         lock.synchronize { buffer.count.should == 40 }
-        post("/push", 'message' => "three") and sleep(0.1)
+        post("/push", 'message' => "three") and sleep(0.2)
         lock.synchronize { buffer.count.should == 60 }
         post("/push", 'message' => "eof") and sleep(0.5)
         clients.each { |c| c.join }
