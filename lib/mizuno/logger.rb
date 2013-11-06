@@ -8,8 +8,8 @@ module Mizuno
 
         LEVELS = {
             ::Logger::DEBUG => Java.org.apache.log4j.Level::DEBUG,
-            ::Logger::INFO => Java.org.apache.log4j.Level::INFO,
-            ::Logger::WARN => Java.org.apache.log4j.Level::WARN,
+            ::Logger::INFO    => Java.org.apache.log4j.Level::INFO,
+            ::Logger::WARN    => Java.org.apache.log4j.Level::WARN,
             ::Logger::ERROR => Java.org.apache.log4j.Level::ERROR,
             ::Logger::FATAL => Java.org.apache.log4j.Level::FATAL }
 

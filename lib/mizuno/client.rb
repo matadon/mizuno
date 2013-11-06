@@ -1,7 +1,8 @@
 require 'thread'
 require 'mizuno'
 Mizuno.require_jars(%w(jetty-client jetty-http jetty-io jetty-util))
-require 'mizuno/client_exchange'
+require 'mizuno/client_response'
+require 'mizuno/client_response_listener'
 
 module Mizuno
     class Client
@@ -27,35 +28,39 @@ module Mizuno
             defaults = { :timeout => 60 }
             options = defaults.merge(options)
             @client = HttpClient.new
-            @client.setConnectorType(HttpClient::CONNECTOR_SELECT_CHANNEL)
-            @client.setMaxConnectionsPerAddress(100)
-            @client.setThreadPool(QueuedThreadPool.new(50))
-            @client.setTimeout(options[:timeout] * 1000)
+            # TODO: @client.setConnectorType(HttpClient::CONNECTOR_SELECT_CHANNEL)
+            @client.setMaxConnectionsPerDestination(100)
+            # TODO: @client.setThreadPool(QueuedThreadPool.new(50))
+            @client.setConnectTimeout(options[:timeout] * 1000)
             @client.start
             @lock = Mutex.new
-            @exchanges = []
+            @listeners = []
         end
 
         def stop(wait = true)
             wait and @lock.synchronize do
-                @exchanges.each { |e| e.waitForDone }
-                @exchanges.clear
+                @listeners.each { |e| e.get(5, java.util.concurrent.TimeUnit::SECONDS) }
+                @listeners.clear
             end
             @client.stop
         end
 
-        def clear(exchange)
+        def clear(listener)
             return unless @lock.try_lock
-            @exchanges.delete(exchange)
+            @listeners.delete(listener)
             @lock.unlock
         end
 
         def request(url, options = {}, &block)
-            exchange = ClientExchange.new(self)
-            @lock.synchronize { @exchanges << exchange }
-            exchange.setup(url, options, &block)
-            @client.send(exchange)
-            return(exchange)
+
+            request = @client.newRequest(url)
+
+            listener = Mizuno::ClientResponseListener.new(request, &block)
+            @lock.synchronize { @listeners << listener }
+
+            request.send(listener)
+
+            return(listener)
         end
     end
 end

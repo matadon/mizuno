@@ -36,7 +36,7 @@ describe RewindableInputStream do
         @stream.rewind
         it_should_read_127_bytes
     end
-    
+
     it "should read incomplete data rewind and read until end" do
         input = 100.times.to_a
         stream = rewindable_input_stream(input.to_java(:byte), 10, 50)
@@ -56,34 +56,34 @@ describe RewindableInputStream do
         100.times { |i| data[i].should == i }
         stream.read.should == -1
     end
-    
+
     it "should rewind unread data" do
         input = []; 100.times { |i| input << i }
         stream = rewindable_input_stream(input.to_java(:byte), 10, 50)
         stream.rewind
-        
+
         data = new_byte_array(120)
         stream.read(data, 10, 110).should == 100
         100.times do |i|
             data[i + 10].should == i
-        end        
+        end
     end
-    
+
     it "should mark and reset" do
         input = []; 100.times { |i| input << i }
         stream = rewindable_input_stream(input.to_java(:byte), 5, 20)
-        
+
         15.times { stream.read }
         stream.markSupported.should == true
         stream.mark(50)
-        
+
         35.times { |i| stream.read.should == 15 + i }
-        
+
         stream.reset
-        
+
         50.times { |i| stream.read.should == 15 + i }
         35.times { |i| stream.read.should == 65 + i }
-        
+
         stream.read.should == -1
     end
 
@@ -105,14 +105,14 @@ describe RewindableInputStream do
         bytes = content.respond_to?(:to_java_bytes) ? content.to_java_bytes : content
         java.io.ByteArrayInputStream.new(bytes)
     end
-    
+
     def new_byte_array(length)
         java.lang.reflect.Array.newInstance(java.lang.Byte::TYPE, length)
     end
-     
+
     def it_should_read_127_bytes(init_size = nil, max_size = nil)
         input = 127.times.to_a
-        stream = @stream || rewindable_input_stream(input.to_java(:byte), 
+        stream = @stream || rewindable_input_stream(input.to_java(:byte),
             init_size, max_size)
 
         # read 7 bytes
@@ -122,7 +122,7 @@ describe RewindableInputStream do
 
         # read 20 bytes
         data = new_byte_array(42)
-        stream.read(data, 10, 20).should == 20 
+        stream.read(data, 10, 20).should == 20
         10.times { |i| data[i].should == 0 }
         20.times { |i| data[i + 10].should == i + 7 }
         10.times { |i| data[i + 30].should == 0 }
@@ -132,7 +132,7 @@ describe RewindableInputStream do
         stream.read(data, 0, 200).should == 100
         100.times { |i| data[i].should == i + 20 + 7 }
         100.times { |i| data[i + 100].should == 0 }
-        
+
         stream
     end
 end

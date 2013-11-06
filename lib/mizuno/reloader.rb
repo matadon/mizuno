@@ -3,14 +3,14 @@ require 'thread'
 
 #:nodoc:
 module Mizuno
-    # 
+    #
     # Middleware for reloading production applications; works exactly
     # like Rack::Reloader, but rather than checking for any changed
     # file, only looks at one specific file.
     #
     # Also allows for explicit reloading via a class method, as well as
     # by sending a SIGHUP to the process.
-    # 
+    #
     class Reloader
         @reloaders = []
 
@@ -80,7 +80,7 @@ module Mizuno
             files.each do |file|
                 next unless file
                 @logger.info("Reloading #{file}")
-                load(file) 
+                load(file)
             end
             @updated = timestamp
         end

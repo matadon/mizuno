@@ -5,7 +5,7 @@ module Mizuno
         include Rack::Response::Helpers
 
         attr_accessor :url, :status, :headers, :body, :ssl, :timeout
-        
+
         def initialize(url)
             @url = url
             @headers = Rack::Utils::HeaderHash.new

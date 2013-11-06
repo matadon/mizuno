@@ -89,6 +89,15 @@ Choice.options do
     end
 
     separator ''
+    separator 'WebSockets options: '
+
+    option :websockets do
+        long '--websockets'
+        desc 'WebSockets adapter class'
+        default nil
+    end
+
+    separator ''
     separator 'Mizuno-specific options: '
 
     option :daemonize do
@@ -175,7 +184,7 @@ Choice.options do
         desc 'Show version'
         action do
             $stderr.puts Mizuno::Server.version
-            exit            
+            exit
         end
     end
 end

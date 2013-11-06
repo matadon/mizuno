@@ -14,7 +14,7 @@ handler.
 Mizuno also supports asynchronous request handling, via the Java Servlet
 3.0 asynchronous processing mechanism
 
-All the speed comes from Jetty 8; Mizuno just ties it to Rack through
+All the speed comes from Jetty 9; Mizuno just ties it to Rack through
 JRuby's Ruby/Java integration layer.
 
 Note that Mizuno is NOT a direct replacement for jruby-rack or Warbler,

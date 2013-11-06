@@ -4,7 +4,7 @@ require 'rack/response'
 require 'json/pure'
 
 #
-# A tiny Rack application for testing the Mizuno webserver.  Each of the
+# A tiny Rack application for testing the Mizuno webserver.    Each of the
 # following paths can be used to test webserver behavior:
 #
 # /ping:: Always returns 200 OK.
@@ -46,18 +46,18 @@ class TestApp
 
     def version(request)
         version = TestApp::VERSION.to_s
-        [ 200, { "Content-Type" => "text/plain", 
-            "Content-Length" => version.length.to_s }, [ version  ] ]
+        [ 200, { "Content-Type" => "text/plain",
+            "Content-Length" => version.length.to_s }, [ version    ] ]
     end
 
     def ping(request)
-        [ 200, { "Content-Type" => "text/plain", 
+        [ 200, { "Content-Type" => "text/plain",
             "Content-Length" => "2" }, [ "OK" ] ]
     end
 
     def error(request, code = nil)
         code ||= (request.path[/^\/\w+\/(\d+)/, 1] or "500")
-        [ code.to_i, { "Content-Type" => "text/plain", 
+        [ code.to_i, { "Content-Type" => "text/plain",
             "Content-Length" => "5" }, [ "ERROR" ] ]
     end
 
@@ -116,9 +116,9 @@ class TestApp
     def stream(request)
         streaming_body = Object.new
         def streaming_body.each
-          yield 'one'
-          sleep 0.1
-          yield 'two'
+            yield 'one'
+            sleep 0.1
+            yield 'two'
         end
         response = Rack::Response.new
         response.body = streaming_body
