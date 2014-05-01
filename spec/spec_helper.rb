@@ -14,6 +14,10 @@ require 'mizuno/server'
 
 Thread.abort_on_exception = true
 
+RSpec.configure do |config|
+    config.treat_symbols_as_metadata_keys_with_true_values = true
+end
+
 module HttpRequests
     def get(path, headers = {})
         Net::HTTP.start(@options[:host], @options[:port]) do |http|

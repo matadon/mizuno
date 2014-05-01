@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
     spec.add_dependency('ffi', '>= 1.0.0')
     spec.add_dependency('choice', '>= 0.1.0')
     spec.add_dependency('childprocess', '>= 0.2.6')
+    spec.add_development_dependency('rake')
     spec.add_development_dependency('rspec', '>= 2.7.0')
     spec.add_development_dependency('rspec-core', '>= 2.7.0')
     spec.add_development_dependency('json_pure', '>= 1.6.0')
