@@ -1,12 +1,12 @@
-require 'thread'
-require 'mizuno'
+require "thread"
+require "mizuno"
 Mizuno.require_jars(%w(jetty-client jetty-http jetty-io jetty-util))
-require 'mizuno/client_exchange'
+require "mizuno/client_exchange"
 
 module Mizuno
     class Client
-        java_import 'org.eclipse.jetty.client.HttpClient'
-        java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
+        java_import "org.eclipse.jetty.client.HttpClient"
+        java_import "org.eclipse.jetty.util.thread.QueuedThreadPool"
 
         @lock = Mutex.new
 

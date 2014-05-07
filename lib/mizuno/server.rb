@@ -18,6 +18,7 @@ module Mizuno
         java_import 'org.eclipse.jetty.server.nio.SelectChannelConnector'
         java_import 'org.eclipse.jetty.util.thread.QueuedThreadPool'
         java_import 'org.jruby.rack.servlet.RewindableInputStream'
+        java_import "org.eclipse.jetty.server.ssl.SslSelectChannelConnector"
 
         attr_accessor :logger
 
@@ -81,6 +82,9 @@ module Mizuno
             connector.setHost(options[:host])
             @server.addConnector(connector)
 
+            # SSL Connector
+            configure_https(options) if options[:ssl_port]
+
             # Switch to a different user or group if we were asked to.
             Runner.setgid(options) if options[:group]
             Runner.setuid(options) if options[:user]
@@ -139,6 +143,18 @@ module Mizuno
             @options[:rewindable] ?
                 Rack::RewindableInput.new(input.to_io.binmode) :
                 RewindableInputStream.new(input).to_io.binmode
+        end
+
+        private
+
+        def configure_https(options)
+            connector = SslSelectChannelConnector.new
+            connector.setPort(options[:ssl_port])
+            factory = connector.getSslContextFactory
+            factory.setKeyStore(options[:keystore] || "keystore")
+            factory.setKeyStorePassword(options[:keystore_password])
+            @server.addConnector(connector)
+            self
         end
     end
 end

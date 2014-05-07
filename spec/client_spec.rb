@@ -42,6 +42,10 @@ describe Mizuno::Client do
         queue.size.should == 2
     end
 
+    # 
+    # https://developer.salesforce.com/page/JavaClientExample.java
+    # http://wiki.eclipse.org/Jetty/Tutorial/HttpClient#SSL_Connections
+    #
     pending "makes https requests to google" do
         called = false
         client = Mizuno::Client.new(:timeout => 30)
