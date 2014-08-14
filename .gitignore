@@ -2,6 +2,7 @@
 *.DS_Store
 *.gem
 .rbenv-version
+.ruby-version
 .rvm
 Gemfile.lock
 archive/

@@ -78,6 +78,7 @@ module Mizuno
 
             # Connector
             connector = SelectChannelConnector.new
+            connector.setReuseAddress(false)
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
             @server.addConnector(connector)
