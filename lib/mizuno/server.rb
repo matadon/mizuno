@@ -72,7 +72,7 @@ module Mizuno
             # Thread pool
             threads = options[:threads] || 50
             thread_pool = QueuedThreadPool.new
-            thread_pool.min_threads = [ threads.to_i / 10, 5 ].max
+            thread_pool.min_threads = options.fetch(:min_threads, [ threads.to_i / 10, 5 ].max)
             thread_pool.max_threads = [ threads.to_i, 10 ].max
             @server.set_thread_pool(thread_pool)
 
