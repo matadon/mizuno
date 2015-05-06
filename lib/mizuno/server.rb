@@ -78,7 +78,8 @@ module Mizuno
 
             # Connector
             connector = SelectChannelConnector.new
-            connector.setReuseAddress(false)
+            # system may not have SO_REUSEPORT options -> `rescue nil`
+            connector.setReuseAddress(options.fetch(:reuse_address, false)) rescue nil
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
             @server.addConnector(connector)
