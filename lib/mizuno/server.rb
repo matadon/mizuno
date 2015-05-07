@@ -82,6 +82,9 @@ module Mizuno
             connector.setReuseAddress(options.fetch(:reuse_address, false)) rescue nil
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
+            max_header_size = options.fetch(:max_header_size, 32768)
+            connector.setRequestHeaderSize(max_header_size)
+            
             @server.addConnector(connector)
 
             # SSL Connector
