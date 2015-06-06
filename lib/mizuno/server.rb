@@ -72,16 +72,19 @@ module Mizuno
             # Thread pool
             threads = options[:threads] || 50
             thread_pool = QueuedThreadPool.new
-            thread_pool.min_threads = options.fetch(:min_threads, [ threads.to_i / 10, 5 ].max)
+            thread_pool.min_threads = options.fetch(:min_threads,
+                [ threads.to_i / 10, 5 ].max)
             thread_pool.max_threads = [ threads.to_i, 10 ].max
             @server.set_thread_pool(thread_pool)
 
             # Connector
             connector = SelectChannelConnector.new
-            # system may not have SO_REUSEPORT options -> `rescue nil`
-            connector.setReuseAddress(options.fetch(:reuse_address, false)) rescue nil
+            connector.setReuseAddress(options.fetch(:reuse_address, false))
             connector.setPort(options[:port].to_i)
             connector.setHost(options[:host])
+            max_header_size = options.fetch(:max_header_size, 32768)
+            connector.setRequestHeaderSize(max_header_size)
+            
             @server.addConnector(connector)
 
             # SSL Connector
