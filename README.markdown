@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/matadon/mizuno/badges/gpa.svg)](https://codeclimate.com/github/matadon/mizuno)
+
 Mizuno is a set of Jetty-powered running shoes for JRuby/Rack.
 
 To use Mizuno with your Rack app:
