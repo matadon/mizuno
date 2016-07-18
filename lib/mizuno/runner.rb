@@ -88,6 +88,7 @@ module Mizuno
             root = options[:root]
             options[:pidfile] = Runner.resolve_path(root, options[:pidfile])
             options[:log] = Runner.resolve_path(root, options[:log])
+            options[:output] = Runner.resolve_path(root, options[:output])
             options[:public] = Runner.resolve_path(root, options[:public])
 
             # Require multiple libraries.
