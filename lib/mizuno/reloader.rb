@@ -12,6 +12,7 @@ module Mizuno
     # by sending a SIGHUP to the process.
     # 
     class Reloader
+        SEMAPHORE = Mutex.new
         @reloaders = []
 
         @trigger = 'tmp/restart.txt'
@@ -25,7 +26,7 @@ module Mizuno
         end
 
         def Reloader.add(reloader)
-            Thread.exclusive do
+            SEMAPHORE.synchronize do
                 @logger ||= Mizuno::Server.logger
                 @reloaders << reloader
             end
@@ -44,7 +45,7 @@ module Mizuno
         # Reload @app on request.
         #
         def call(env)
-            Thread.exclusive { reload! }
+            SEMAPHORE.synchronize { reload! }
             @app.call(env)
         end
 
