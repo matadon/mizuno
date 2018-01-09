@@ -203,7 +203,7 @@ module Mizuno
         # Fetches the PID from the :pidfile.
         #
         def Runner.pid(options)
-            options[:pidfile] or die("Speficy a --pidfile to daemonize.") 
+            options[:pidfile] or die("Specify a --pidfile to daemonize.") 
             return unless File.exists?(options[:pidfile])
             pid = File.read(options[:pidfile]).to_i
 
