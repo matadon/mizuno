@@ -78,7 +78,7 @@ Choice.options do
     option :log4j do
       # e.g. jruby -J-Dlog4j.debug=true -J-Dlog4j.configuration=file:///log4j_config_dir/log4j.properties  /path_to_mizuno/mizuno --log4j
       long '--log4j'
-      desc 'Disable default log4j configuration and allow confiuration via -J-Dlog4j.configuration=file://mypath/log4j.properties'
+      desc 'Disable default log4j configuration and allow configuration via -J-Dlog4j.configuration=file://mypath/log4j.properties'
       default false
     end
 
