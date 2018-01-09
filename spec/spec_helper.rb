@@ -15,7 +15,6 @@ require 'mizuno/server'
 Thread.abort_on_exception = true
 
 RSpec.configure do |config|
-    config.treat_symbols_as_metadata_keys_with_true_values = true
 end
 
 module HttpRequests
